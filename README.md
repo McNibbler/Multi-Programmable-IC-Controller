@@ -1,2 +1,2 @@
 # DAC-Controller
-Simple Arduino program designed to control an AD5722/AD5732/AD5752 DAC through SPI communication.
+Simple Arduino program designed to control an AD5722/AD5732/AD5752 DAC through SPI communication, specifically the AD5732. This IC is a 14 bit individually addressable dual output DAC. The spec sheet can be seen here: http://www.analog.com/media/en/technical-documentation/data-sheets/AD5722_5732_5752.pdf
