@@ -17,11 +17,11 @@
 ////////////////////
 
 // Set REFERENCE_VOLTAGE to the voltage of the reference pin
-const double REFERENCE_VOLTAGE = 2.048;
+const double REFERENCE_VOLTAGE = 2.5;
 
 // Set DESIRED_VOLTAGE to the voltage you wish to produce from the DAC
-const double DESIRED_VOLTAGE_1 = 1.024;
-const double DESIRED_VOLTAGE_2 = 0.512;
+const double DESIRED_VOLTAGE_1 = 1.25;
+const double DESIRED_VOLTAGE_2 = -0.75;
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
@@ -51,6 +51,10 @@ const int CLOCK_SPEED = 5000000;  // DAC is rated for 30MHz, Arduino clock is mu
 // This uses SPI_MODE1 or SPI_MODE2 but I'm not 100% sure which one it is. I think 2 but I can't tell.
 SPISettings DEFAULT_SETTINGS(CLOCK_SPEED, MSBFIRST, SPI_MODE2);
 
+// Input pins for DACs to read back voltages
+const int DAC_1 = A4;
+const int DAC_2 = A5;
+
 
 //////////////////////////////////////////////////////////////////////
 
@@ -66,8 +70,14 @@ void setup() {
   pinMode(LDAC, OUTPUT);
   digitalWrite(LDAC, LOW);
 
+  // Initializes readback pins for voltages
+  pinMode(DAC_1, INPUT);
+  pinMode(DAC_2, INPUT);
+
   // Initializes the SPI protocol
   SPI.begin();
+
+  Serial.begin(9600);
 
 }
 
@@ -119,6 +129,9 @@ void setOutput(double desired1, double desired2, double reference, SPISettings s
     SPI.transfer16(calcOutput(desired1, reference, bipolar));  // transfers 16 bits of data (including dummy bits at end)
     digitalWrite(SS, HIGH);
     SPI.endTransaction();
+    Serial.println(analogRead(DAC_1));
+    Serial.println(analogRead(DAC_2));
+    Serial.println("~~~~~~~~~~~~~~~~~~~~~~~~");
     
   }
 
@@ -150,6 +163,10 @@ void setOutput(double desired1, double desired2, double reference, SPISettings s
     SPI.transfer16(calcOutput(desired2, reference, bipolar));  // transfers 16 bits of data (including dummy bits at end)
     digitalWrite(SS, HIGH);
     SPI.endTransaction();
+
+    Serial.println(analogRead(DAC_1));
+    Serial.println(analogRead(DAC_2));
+    Serial.println("~~~~~~~~~~~~~~~~~~~~~~~~");
     
   }
   
