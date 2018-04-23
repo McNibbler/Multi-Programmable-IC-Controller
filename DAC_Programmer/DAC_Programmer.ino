@@ -45,7 +45,7 @@ const int LDAC = 8;
 const int MAX_BITS = 16;          // Number of Bits after the initial header
 const int BITS = 14;              // Number of Bits of precision
 const bool BIPOLAR = true;        // Currently, the DAC is set to have a bipolar output
-const int CLOCK_SPEED = 5000000;  // DAC is rated for 30MHz, Arduino clock is much lower?
+const int CLOCK_SPEED = 100;  // DAC is rated for 30MHz, Arduino clock is much lower?
 
 // SPI settings
 // This uses SPI_MODE1 or SPI_MODE2 but I'm not 100% sure which one it is. I think 2 but I can't tell.
@@ -90,7 +90,7 @@ void setup() {
 void loop() {
   
   setOutput(DESIRED_VOLTAGE_1, DESIRED_VOLTAGE_2, REFERENCE_VOLTAGE, DEFAULT_SETTINGS, BIPOLAR);
-  delay(1000);
+  delayMicroseconds(5000);
 
 }
 
@@ -152,6 +152,7 @@ void setOutput(double desired1, double desired2, double reference, SPISettings s
     // Removes the address from the first DAC
     header -= dacChannel;
 
+    delayMicroseconds(1000);
 
     // 010 writes to DAC B
     dacChannel = 2;
