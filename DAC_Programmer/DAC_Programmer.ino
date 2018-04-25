@@ -1,5 +1,5 @@
 /* DAC Controller
- * Version: beta 0.4
+ * Version: 1.0
  * 
  * Thomas Kaunzinger
  * Xcerra Corp.
@@ -61,7 +61,7 @@
 const double REFERENCE_VOLTAGE = 2.5;
 
 // Set DESIRED_VOLTAGE to the voltage you wish to produce from the DAC
-const double DESIRED_VOLTAGE_1 = 1.25;
+const double DESIRED_VOLTAGE_1 = -1.25;
 const double DESIRED_VOLTAGE_2 = 0.75;
 
 // Choose between bipolar and unipolar data
@@ -95,6 +95,7 @@ const int CLOCK_SPEED = 10000;    // DAC is rated for 30MHz, Arduino clock is mu
 SPISettings DEFAULT_SETTINGS(CLOCK_SPEED, MSBFIRST, SPI_MODE2);
 
 // Input pins for DACs to read back voltages
+// NOT TO BE USED IF BIPOLAR, ARDUINO ANALOG IN IS ONLY RATED FROM 0V TO 5V
 const int DAC_1 = A4;
 const int DAC_2 = A5;
 
@@ -132,6 +133,10 @@ const short BI_5 = 3;     // 011
 const short BI_10 = 4;    // 100
 const short BI_108 = 5;   // 101
 
+// DAC's gain
+const double GAIN = 2;
+
+
 
 //////////////////////////////////////////////////////////////////////
 
@@ -155,12 +160,18 @@ void setup() {
 
 
   // Sets up output range
-  char rangeHeader = headerConstructor(WRITE, RANGE_REGISTER, DAC_BOTH);
+  char rangeHeaderA = headerConstructor(WRITE, RANGE_REGISTER, DAC_A);        // I have to write to all 3 of these channels individually.
+  char rangeHeaderB = headerConstructor(WRITE, RANGE_REGISTER, DAC_B);        // Writing to "BOTH" apparently isn't enough smh.
+  char rangeHeaderBoth = headerConstructor(WRITE, RANGE_REGISTER, DAC_BOTH);
   if (BIPOLAR){
-    sendData(rangeHeader, BI_5, DEFAULT_SETTINGS);
+    sendData(rangeHeaderA, BI_5, DEFAULT_SETTINGS);
+    sendData(rangeHeaderB, BI_5, DEFAULT_SETTINGS);
+    sendData(rangeHeaderBoth, BI_5, DEFAULT_SETTINGS);
   }
   else{
-    sendData(rangeHeader, UNI_5, DEFAULT_SETTINGS);
+    sendData(rangeHeaderA, UNI_5, DEFAULT_SETTINGS);
+    sendData(rangeHeaderB, UNI_5, DEFAULT_SETTINGS);
+    sendData(rangeHeaderBoth, UNI_5, DEFAULT_SETTINGS);
   }
 
 
@@ -186,7 +197,6 @@ void setup() {
   /* POWER OPERATION GUIDE
    * 
    * Data bits are as follows:
-   * 
    * X     X     X     X     X     0     OCb   X     OCa   X     TSD   X     X     PUb   X     PUa
    * 
    * X = Don't care, I'm defaulting to 0 for this
@@ -219,8 +229,12 @@ void setup() {
 ////////////////////
 void loop() {
 
-  // Sends the desired DAC data
-  setOutput(DESIRED_VOLTAGE_1, DESIRED_VOLTAGE_2, REFERENCE_VOLTAGE, DEFAULT_SETTINGS, BIPOLAR);
+  // Compensates for the gain of the DAC
+  double voltageCompensated1 = DESIRED_VOLTAGE_1 / GAIN;
+  double voltageCompensated2 = DESIRED_VOLTAGE_2 / GAIN;
+
+  // Writes the desired outputs to the DACs
+  setOutput(voltageCompensated1, voltageCompensated2, REFERENCE_VOLTAGE, DEFAULT_SETTINGS, BIPOLAR);
   
   // For loading the data
   char loadHeader = headerConstructor(WRITE, CONTROL_REGISTER, LOAD);
@@ -266,10 +280,10 @@ void setOutput(double desired1, double desired2, double reference, SPISettings s
 
   // Sets DAC A and then DAC B to the two desired voltages
   else{
-
+    
     header += DAC_A;
     sendData(header, bits1, settings);
-    header -= DAC_A; // Removes the address from the first DAC
+    header -= DAC_A; // Removes the address from the first DAC (yes I know it's already 0 but like just to be safe)
 
     header += DAC_B;
     sendData(header, bits2, settings);
@@ -282,7 +296,6 @@ void setOutput(double desired1, double desired2, double reference, SPISettings s
 // Calculates what integer level to set as the output based on the ratio between the desired voltage to get from the DAC and the DAC's
 // reference voltage, taking a ratio of the two floating point numbers and multiplying by the constant number of bits the DAC can handle
 short calcOutput(double voltage, double reference, bool bipolar){
-
   double fraction;
 
   // Offsets the fraction based on if the DAC mode is bipolar or not
@@ -295,6 +308,7 @@ short calcOutput(double voltage, double reference, bool bipolar){
   
   short shortboi = short(fraction * pow(2,BITS)); 
   shortboi = shortboi << (MAX_BITS - BITS);         // Bit shifts appropriate amount to account for dummy bits
+  
   return shortboi;
 }
 
@@ -307,7 +321,8 @@ void sendData(char header, short data, SPISettings settings){
   SPI.transfer16(data);
   digitalWrite(SS, HIGH);
   SPI.endTransaction();
-  delayMicroseconds(30);
+  
+  delayMicroseconds(30);        // Mostly arbitrary, but it's a good amount of delay relative to everything
 }
 
 // returns an 8 bit header to send to the DAC before the data
@@ -321,5 +336,3 @@ char headerConstructor(char readWrite, char dacRegister, char channel){
 
   return header;
 }
-
-
