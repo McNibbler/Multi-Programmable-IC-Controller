@@ -9,6 +9,47 @@
  * http://www.analog.com/media/en/technical-documentation/data-sheets/AD5722_5732_5752.pdf
  */
 
+//////////////////////////
+// OPERATION OF THE DAC //
+//////////////////////////
+
+/* Power-up sequence:
+ *  Ideally, the DAC is to be powered up in the following order to ensure that the DAC registers are loaded with 0x0000:
+ *    GND --> SIG_GND --> DAC GND   (I prefer shorting all supplies to the same ground)
+ *    DVcc                          (Digital power must be applied BEFORE analog power)
+ *    AVss and AVdd                 (Order does not matter for these, as long as they are after DVcc)
+ *  
+ * Communication:
+ *  The DAC is capable of communication through SPI, QSPI, MICROWIRE, and DSP and is rated at 30MHz. Data input is done in
+ *  24 bit registers with most significant bit first. This program uses SPI at 10kHz due to limitations of the Arduino.
+ * 
+ * LDAC:
+ *  If this is held high, the DAC waits until the falling edge of LDAC to update all inputs simultaneously. If tied permanently
+ *  low, data is updated individually.
+ * 
+ * CLR:
+ *  When CLR is tied permanently low, code input is done through 2's compliment, and while it is tied permanently high, code is
+ *  inputted through midscale binary (what this program uses).
+ * 
+ * First writes:
+ *  The first communication to the DAC should be to set the output range on all channels by writing to the output range select
+ *  register (default is 5V unipolar range).
+ *  
+ *  Furthermore, to program an output, it must first be powered up using the power control register, otherwise all code trying
+ *  to access these is ignored.
+ * 
+ * Gain:
+ *  Internal gain from the DAC is determined by the selected output range from the user.
+ *    Range (V)   | Gain
+ *    -------------------
+ *    + 5         | 2
+ *    + 10        | 4
+ *    + 10.8      | 4.32
+ *    +/- 5       | 4
+ *    +/- 10      | 8
+ *    +/- 10.8    | 8.64
+ */
+
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
@@ -21,7 +62,7 @@ const double REFERENCE_VOLTAGE = 2.5;
 
 // Set DESIRED_VOLTAGE to the voltage you wish to produce from the DAC
 const double DESIRED_VOLTAGE_1 = 1.25;
-const double DESIRED_VOLTAGE_2 = -0.75;
+const double DESIRED_VOLTAGE_2 = 0.75;
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
