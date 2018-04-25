@@ -1,9 +1,9 @@
 /* DAC Controller
- * Version 0.3
+ * Version: beta 0.4
  * 
  * Thomas Kaunzinger
  * Xcerra Corp.
- * April 11, 2018
+ * April 25, 2018
  * 
  * This program is designed to select and output a desired voltage from an AD5722/AD5732/AD5752 DAC using SPI
  * http://www.analog.com/media/en/technical-documentation/data-sheets/AD5722_5732_5752.pdf
@@ -97,6 +97,44 @@ const int DAC_1 = A4;
 const int DAC_2 = A5;
 
 
+///////////////////////////
+// DAC CONTROL CONSTANTS //
+///////////////////////////
+
+// R/W (write is active low)
+const char READ = 1;
+const char WRITE = 0;
+
+// Registers for controlling DAC
+const char DAC_REGISTER = 0;      // 000
+const char RANGE_REGISTER = 1;    // 001
+const char POWER_REGISTER = 2;    // 010
+const char CONTROL_REGISTER = 3;  // 011
+
+// DAC channel addresses
+const char DAC_A = 0;     // 000
+const char DAC_B = 2;     // 010
+const char DAC_BOTH = 4;  // 100
+
+// Control channel addresses
+const char NOP = 0;       // 000
+const char TOGGLES = 1;   // 001
+const char CLR = 4;       // 100
+const char LOAD = 5;      // 101
+
+// Output range select register
+const short UNI_5 = 0;    // 000
+const short UNI_10 = 1;   // 001
+const short UNI_108 = 2;  // 010
+const short BI_5 = 3;     // 011
+const short BI_10 = 4;    // 100
+const short BI_108 = 5;   // 101
+
+// Load header (loads the data)
+const char LOAD_HEADER = headerConstructor(WRITE, CONTROL_REGISTER, LOAD);
+
+
+
 //////////////////////////////////////////////////////////////////////
 
 ///////////
@@ -104,22 +142,74 @@ const int DAC_2 = A5;
 ///////////
 void setup() {
 
-  // Set up slave-select pin. SPI lib handles others
-  digitalWrite(SS, HIGH);
-
-  // Sets LDAC to low as seen on data sheet
-  pinMode(LDAC, OUTPUT);
+  // Initialization
+  digitalWrite(SS, HIGH);   // Set up slave-select pin. SPI lib handles others
+  pinMode(LDAC, OUTPUT);    // Sets LDAC to low because synchronous updating isn't important for this
   digitalWrite(LDAC, LOW);
-
-  // Initializes readback pins for voltages
-  pinMode(DAC_1, INPUT);
+  pinMode(DAC_1, INPUT);    // Initializes readback pins for voltages
   pinMode(DAC_2, INPUT);
+  Serial.begin(9600);       // Starts serial communication through USB for debugging
+  SPI.begin();              // Initializes the SPI protocol
 
-  // Initializes the SPI protocol
-  SPI.begin();
 
-  Serial.begin(9600);
+  // I'm generous and giving you 10 whole seconds before starting to power everything
+  delay(10000);
 
+
+  // Sets up output range
+  char rangeHeader = headerConstructor(WRITE, RANGE_REGISTER, DAC_BOTH);
+  if (BIPOLAR){
+    sendData(rangeHeader, BI_5, SETTINGS);
+  }
+  else{
+    sendData(rangeHeader, UNI_5, SETTINGS);
+  }
+
+
+  // Sets up DAC preferences
+  char controlToggleHeader = headerConstructor(WRITE, CONTROL_REGISTER, TOGGLES);
+  /* CONTROL TOGGLES OPERATION GUIDE
+   * 
+   * Thermal SD       0 = No thermal shutdown         1 = Enable thermal shutdown
+   * Clamp enable     0 = Auto channel shutdown       1 = Constant current clamp when shorted
+   * CLR Select       0 = CLR clears to GND           1 = CLR clears to full-scale
+   * SDO disable      0 = Keeps slave data out        1 = Disables slave data out
+   * 
+   * Thermal SD   | Clamp enable  | CLR Select    | SDO disable
+   * ----------------------------------------------------------
+   * 1            | 0             | 0             | 0
+   */
+  short controlToggleData = 4;
+  sendData(controlHeader, controlToggleData, SETTINGS);
+  
+
+  // Powers up the DAC channels
+  char powerHeader = headerConstructor(WRITE, POWER_REGISTER, short(0));
+  /* POWER OPERATION GUIDE
+   * 
+   * Data bits are as follows:
+   * 
+   * X     X     X     X     X     0     OCb   X     OCa   X     TSD   X     X     PUb   X     PUa
+   * 
+   * X = Don't care, I'm defaulting to 0 for this
+   * OCa and OCb are read-only bits that alert if overcurrent is detected in either respective DAC channels
+   * TSD is a read-only bit and is set in the event that the channels have shut down due to overheating
+   * 
+   * PUa and PUb are bits to send to power-up their respective DAC channels
+   * 
+   * To power up both DACs, I will send as follows:
+   * 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 1
+   */
+  short powerData = 3;
+  sendData(powerHeader, powerData, SETTINGS);
+
+
+  // Sends the function to update and load the DAC data
+  sendData(LOAD_HEADER, short(0), SETTINGS);
+
+
+  // Slight delay before sending the data to the DAC repeatedly in the loop
+  delay(1000);
 }
 
 
@@ -129,11 +219,19 @@ void setup() {
 // EXECUTION LOOP //
 ////////////////////
 void loop() {
-  
+
+  // Sends the desired DAC data
   setOutput(DESIRED_VOLTAGE_1, DESIRED_VOLTAGE_2, REFERENCE_VOLTAGE, DEFAULT_SETTINGS, BIPOLAR);
+  
+  // Sends the function to update and load the DAC data
+  sendData(LOAD_HEADER, short(0), SETTINGS);
+
+  // Prints the data from the two read-in pins for debugging
   Serial.println(analogRead(DAC_1));
   Serial.println(analogRead(DAC_2));
   Serial.println("~~~~~~~~~~~~~~~~~~~~~~~~");
+
+  // Slight delay between sending data
   delayMicroseconds(500);
 
 }
@@ -145,32 +243,23 @@ void loop() {
 // HELPER FUNCTIONS //
 //////////////////////
 
-// Enables the slave select for the DAC, calculates the value for the desired voltage, and communicates to DAC through SPI before closing the SS
+// Enables the slave select for the DAC, calculates the value for the desired voltage, and sendDatas to DAC through SPI before closing the SS
 void setOutput(double desired1, double desired2, double reference, SPISettings settings, bool bipolar){
 
-  // header to address that you are programming to the DAC
-  char readWrite = 0;     // Write is active low bit
-  char reserved = 0;      // Resserved 0 bit
-  char dacRegister = 0;   // 3 bits, indicates accessing of DAC register
-  char dacChannel;        // initializes the variable to address one or both of the DACs
-
   // Creates an 8-bit header to send to the chip to show where it is writing its information to
-  char header;
-  header = readWrite << 7;
-  header += reserved << 6;
-  header += dacRegister << 3;
+  char header = headerConstructor(0, 0, 0);   // Write is active low, DAC register is 000, dacChannel is set to 0 to initialize
 
   // Calculates the bits of data to send to the DAC
   short bits1 = calcOutput(desired1, reference, bipolar);
   short bits2 = calcOutput(desired2, reference, bipolar);
 
+  char dacChannel;
   
   // checks if the two variables are exactly the same (e.g. calling setOutput(DESIRED_VOLTAGE_1, DESIRED_VOLTAGE_1, ...)) and uses the 'Both' address
   if (desired1 == desired2){
-
-    dacChannel = 4;       // 100 writes to both DACs
-    header += dacChannel;
-    communicate(header, bits1, settings);
+    
+    header += DAC_BOTH;
+    sendData(header, bits1, settings);
     
   }
 
@@ -178,16 +267,12 @@ void setOutput(double desired1, double desired2, double reference, SPISettings s
   // Sets DAC A and then DAC B to the two desired voltages
   else{
 
-    dacChannel = 0;       // 000 writes to DAC A
-    header += dacChannel;
-    communicate(header, bits1, settings);
-    header -= dacChannel; // Removes the address from the first DAC
+    header += DAC_A;
+    sendData(header, bits1, settings);
+    header -= DAC_A; // Removes the address from the first DAC
 
-    delayMicroseconds(30);
-
-    dacChannel = 2;       // 010 writes to DAC B
-    header += dacChannel;
-    communicate(header, bits2, settings);
+    header += DAC_B;
+    sendData(header, bits2, settings);
     
   }
   
@@ -215,15 +300,26 @@ short calcOutput(double voltage, double reference, bool bipolar){
 
 
 // sends 24-bit sequence to the DAC
-void communicate(char header, short data, SPISettings settings){
+void sendData(char header, short data, SPISettings settings){
   SPI.beginTransaction(settings);
   digitalWrite(SS, LOW);
   SPI.transfer(header);
   SPI.transfer16(data);
   digitalWrite(SS, HIGH);
   SPI.endTransaction();
+  delayMicroseconds(30);
 }
 
+// returns an 8 bit header to send to the DAC before the data
+char headerConstructor(char readWrite, char dacRegister, char channel){
+  char header;
+  
+  header = readWrite << 7;      // RW logic bit
+  header += 0 << 6;             // Reserved 0
+  header += dacRegister << 3;   // Register for what you are sending data to
+  header += channel;            // Which channel of the register are you controlling
 
+  return header;
+}
 
 
