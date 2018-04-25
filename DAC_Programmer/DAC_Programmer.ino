@@ -131,6 +131,9 @@ void setup() {
 void loop() {
   
   setOutput(DESIRED_VOLTAGE_1, DESIRED_VOLTAGE_2, REFERENCE_VOLTAGE, DEFAULT_SETTINGS, BIPOLAR);
+  Serial.println(analogRead(DAC_1));
+  Serial.println(analogRead(DAC_2));
+  Serial.println("~~~~~~~~~~~~~~~~~~~~~~~~");
   delayMicroseconds(500);
 
 }
@@ -157,62 +160,39 @@ void setOutput(double desired1, double desired2, double reference, SPISettings s
   header += reserved << 6;
   header += dacRegister << 3;
 
+  // Calculates the bits of data to send to the DAC
+  short bits1 = calcOutput(desired1, reference, bipolar);
+  short bits2 = calcOutput(desired2, reference, bipolar);
+
+  
   // checks if the two variables are exactly the same (e.g. calling setOutput(DESIRED_VOLTAGE_1, DESIRED_VOLTAGE_1, ...)) and uses the 'Both' address
   if (desired1 == desired2){
 
-    // 100 writes to both DACs
-    dacChannel = 4;
+    dacChannel = 4;       // 100 writes to both DACs
     header += dacChannel;
-    
-    SPI.beginTransaction(settings);
-    digitalWrite(SS, LOW);
-    SPI.transfer(header);   // transfers 8 bit char header
-    SPI.transfer16(calcOutput(desired1, reference, bipolar));  // transfers 16 bits of data (including dummy bits at end)
-    digitalWrite(SS, HIGH);
-    SPI.endTransaction();
-    Serial.println(analogRead(DAC_1));
-    Serial.println(analogRead(DAC_2));
-    Serial.println("~~~~~~~~~~~~~~~~~~~~~~~~");
+    communicate(header, bits1, settings);
     
   }
+
 
   // Sets DAC A and then DAC B to the two desired voltages
   else{
 
-    // 000 writes to DAC A
-    dacChannel = 0;
+    dacChannel = 0;       // 000 writes to DAC A
     header += dacChannel;
-    
-    SPI.beginTransaction(settings);
-    digitalWrite(SS, LOW);
-    SPI.transfer(header);   // transfers 8 bit char header
-    SPI.transfer16(calcOutput(desired1, reference, bipolar));  // transfers 16 bits of data (including dummy bits at end)
-    digitalWrite(SS, HIGH);
-    SPI.endTransaction();
-
-    // Removes the address from the first DAC
-    header -= dacChannel;
+    communicate(header, bits1, settings);
+    header -= dacChannel; // Removes the address from the first DAC
 
     delayMicroseconds(30);
 
-    // 010 writes to DAC B
-    dacChannel = 2;
+    dacChannel = 2;       // 010 writes to DAC B
     header += dacChannel;
-
-    SPI.beginTransaction(settings);
-    digitalWrite(SS, LOW);
-    SPI.transfer(header);   // transfers 8 bit char header
-    SPI.transfer16(calcOutput(desired2, reference, bipolar));  // transfers 16 bits of data (including dummy bits at end)
-    digitalWrite(SS, HIGH);
-    SPI.endTransaction();
-
-    Serial.println(analogRead(DAC_1));
-    Serial.println(analogRead(DAC_2));
-    Serial.println("~~~~~~~~~~~~~~~~~~~~~~~~");
+    communicate(header, bits2, settings);
     
   }
   
 }
+
 
 // Calculates what integer level to set as the output based on the ratio between the desired voltage to get from the DAC and the DAC's
 // reference voltage, taking a ratio of the two floating point numbers and multiplying by the constant number of bits the DAC can handle
@@ -231,6 +211,17 @@ short calcOutput(double voltage, double reference, bool bipolar){
   short shortboi = short(fraction * pow(2,BITS)); 
   shortboi = shortboi << (MAX_BITS - BITS);         // Bit shifts appropriate amount to account for dummy bits
   return shortboi;
+}
+
+
+// sends 24-bit sequence to the DAC
+void communicate(char header, short data, SPISettings settings){
+  SPI.beginTransaction(settings);
+  digitalWrite(SS, LOW);
+  SPI.transfer(header);
+  SPI.transfer16(data);
+  digitalWrite(SS, HIGH);
+  SPI.endTransaction();
 }
 
 
