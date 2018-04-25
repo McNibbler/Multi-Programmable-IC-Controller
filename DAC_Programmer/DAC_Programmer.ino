@@ -130,10 +130,6 @@ const short BI_5 = 3;     // 011
 const short BI_10 = 4;    // 100
 const short BI_108 = 5;   // 101
 
-// Load header (loads the data)
-const char LOAD_HEADER = headerConstructor(WRITE, CONTROL_REGISTER, LOAD);
-
-
 
 //////////////////////////////////////////////////////////////////////
 
@@ -159,10 +155,10 @@ void setup() {
   // Sets up output range
   char rangeHeader = headerConstructor(WRITE, RANGE_REGISTER, DAC_BOTH);
   if (BIPOLAR){
-    sendData(rangeHeader, BI_5, SETTINGS);
+    sendData(rangeHeader, BI_5, DEFAULT_SETTINGS);
   }
   else{
-    sendData(rangeHeader, UNI_5, SETTINGS);
+    sendData(rangeHeader, UNI_5, DEFAULT_SETTINGS);
   }
 
 
@@ -180,7 +176,7 @@ void setup() {
    * 1            | 0             | 0             | 0
    */
   short controlToggleData = 4;
-  sendData(controlHeader, controlToggleData, SETTINGS);
+  sendData(controlToggleHeader, controlToggleData, DEFAULT_SETTINGS);
   
 
   // Powers up the DAC channels
@@ -201,11 +197,12 @@ void setup() {
    * 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 1
    */
   short powerData = 3;
-  sendData(powerHeader, powerData, SETTINGS);
+  sendData(powerHeader, powerData, DEFAULT_SETTINGS);
 
 
   // Sends the function to update and load the DAC data
-  sendData(LOAD_HEADER, short(0), SETTINGS);
+  char loadHeader = headerConstructor(WRITE, CONTROL_REGISTER, LOAD);
+  sendData(loadHeader, short(0), DEFAULT_SETTINGS);
 
 
   // Slight delay before sending the data to the DAC repeatedly in the loop
@@ -222,9 +219,6 @@ void loop() {
 
   // Sends the desired DAC data
   setOutput(DESIRED_VOLTAGE_1, DESIRED_VOLTAGE_2, REFERENCE_VOLTAGE, DEFAULT_SETTINGS, BIPOLAR);
-  
-  // Sends the function to update and load the DAC data
-  sendData(LOAD_HEADER, short(0), SETTINGS);
 
   // Prints the data from the two read-in pins for debugging
   Serial.println(analogRead(DAC_1));
@@ -253,6 +247,9 @@ void setOutput(double desired1, double desired2, double reference, SPISettings s
   short bits1 = calcOutput(desired1, reference, bipolar);
   short bits2 = calcOutput(desired2, reference, bipolar);
 
+  // For loading the data
+  char loadHeader = headerConstructor(WRITE, CONTROL_REGISTER, LOAD);
+
   char dacChannel;
   
   // checks if the two variables are exactly the same (e.g. calling setOutput(DESIRED_VOLTAGE_1, DESIRED_VOLTAGE_1, ...)) and uses the 'Both' address
@@ -260,6 +257,8 @@ void setOutput(double desired1, double desired2, double reference, SPISettings s
     
     header += DAC_BOTH;
     sendData(header, bits1, settings);
+
+    sendData(loadHeader, short(0), DEFAULT_SETTINGS);
     
   }
 
@@ -269,10 +268,12 @@ void setOutput(double desired1, double desired2, double reference, SPISettings s
 
     header += DAC_A;
     sendData(header, bits1, settings);
+    sendData(loadHeader, short(0), DEFAULT_SETTINGS);
     header -= DAC_A; // Removes the address from the first DAC
 
     header += DAC_B;
     sendData(header, bits2, settings);
+    sendData(loadHeader, short(0), DEFAULT_SETTINGS);
     
   }
   
