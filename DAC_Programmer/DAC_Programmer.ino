@@ -64,6 +64,9 @@ const double REFERENCE_VOLTAGE = 2.5;
 const double DESIRED_VOLTAGE_1 = 1.25;
 const double DESIRED_VOLTAGE_2 = 0.75;
 
+// Choose between bipolar and unipolar data
+const bool BIPOLAR = true;
+
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
@@ -85,7 +88,6 @@ const int LDAC = 8;
 // DAC Information
 const int MAX_BITS = 16;          // Number of Bits after the initial header
 const int BITS = 14;              // Number of Bits of precision for the DAC being used
-const bool BIPOLAR = true;        // Currently, the DAC is set to have a bipolar output
 const int CLOCK_SPEED = 10000;    // DAC is rated for 30MHz, Arduino clock is much lower? Signal started looking really bad @100kHz
 
 // SPI settings
@@ -196,7 +198,7 @@ void setup() {
    * To power up both DACs, I will send as follows:
    * 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 1
    */
-  short powerData = 3;
+  short powerData = 5;
   sendData(powerHeader, powerData, DEFAULT_SETTINGS);
 
 
@@ -219,6 +221,10 @@ void loop() {
 
   // Sends the desired DAC data
   setOutput(DESIRED_VOLTAGE_1, DESIRED_VOLTAGE_2, REFERENCE_VOLTAGE, DEFAULT_SETTINGS, BIPOLAR);
+  
+  // For loading the data
+  char loadHeader = headerConstructor(WRITE, CONTROL_REGISTER, LOAD);
+  sendData(loadHeader, short(0), DEFAULT_SETTINGS);
 
   // Prints the data from the two read-in pins for debugging
   Serial.println(analogRead(DAC_1));
@@ -247,9 +253,6 @@ void setOutput(double desired1, double desired2, double reference, SPISettings s
   short bits1 = calcOutput(desired1, reference, bipolar);
   short bits2 = calcOutput(desired2, reference, bipolar);
 
-  // For loading the data
-  char loadHeader = headerConstructor(WRITE, CONTROL_REGISTER, LOAD);
-
   char dacChannel;
   
   // checks if the two variables are exactly the same (e.g. calling setOutput(DESIRED_VOLTAGE_1, DESIRED_VOLTAGE_1, ...)) and uses the 'Both' address
@@ -257,8 +260,6 @@ void setOutput(double desired1, double desired2, double reference, SPISettings s
     
     header += DAC_BOTH;
     sendData(header, bits1, settings);
-
-    sendData(loadHeader, short(0), DEFAULT_SETTINGS);
     
   }
 
@@ -268,12 +269,10 @@ void setOutput(double desired1, double desired2, double reference, SPISettings s
 
     header += DAC_A;
     sendData(header, bits1, settings);
-    sendData(loadHeader, short(0), DEFAULT_SETTINGS);
     header -= DAC_A; // Removes the address from the first DAC
 
     header += DAC_B;
     sendData(header, bits2, settings);
-    sendData(loadHeader, short(0), DEFAULT_SETTINGS);
     
   }
   
