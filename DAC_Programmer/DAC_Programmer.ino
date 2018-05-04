@@ -1,9 +1,9 @@
 /* DAC Controller
- * Version: 1.0
+ * Version: 1.1
  * 
  * Thomas Kaunzinger
  * Xcerra Corp.
- * April 25, 2018
+ * May 4, 2018
  * 
  * This program is designed to select and output a desired voltage from an AD5722/AD5732/AD5752 DAC using SPI
  * http://www.analog.com/media/en/technical-documentation/data-sheets/AD5722_5732_5752.pdf
@@ -50,6 +50,14 @@
  *    +/- 10.8    | 8.64
  */
 
+///////////////
+// LIBRARIES //
+///////////////
+
+#include <SPI.h>
+#include <math.h>
+#include <stdint.h>
+
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
@@ -70,25 +78,21 @@ const bool BIPOLAR = true;
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-///////////////////////////
-// LIBRARIES + CONSTANTS //
-///////////////////////////
-
-// Libraries
-#include <SPI.h>
-#include <math.h>
+///////////////
+// CONSTANTS //
+///////////////
 
 // Pins
-//const int SS = 10;
-//const int SDI = 11;
-//const int SDO = 12;
-//const int CLK = 13;
-const int LDAC = 8;
+//const int_fast8_t SS = 10;
+//const int_fast8_t SDI = 11;
+//const int_fast8_t SDO = 12;
+//const int_fast8_t CLK = 13;
+const int_fast8_t LDAC = 8;
 
 // DAC Information
-const int MAX_BITS = 16;          // Number of Bits after the initial header
-const int BITS = 14;              // Number of Bits of precision for the DAC being used
-const int CLOCK_SPEED = 10000;    // DAC is rated for 30MHz, Arduino clock is much lower? Signal started looking really bad @100kHz
+const int_fast8_t MAX_BITS = 16;          // Number of Bits after the initial header
+const int_fast8_t BITS = 14;              // Number of Bits of precision for the DAC being used
+const int_fast16_t CLOCK_SPEED = 10000;    // DAC is rated for 30MHz, Arduino clock is much lower? Signal started looking really bad @100kHz
 
 // SPI settings
 // This uses SPI_MODE1 or SPI_MODE2 but I'm not 100% sure which one it is. I think 2 but I can't tell.
@@ -96,8 +100,8 @@ SPISettings DEFAULT_SETTINGS(CLOCK_SPEED, MSBFIRST, SPI_MODE2);
 
 // Input pins for DACs to read back voltages
 // NOT TO BE USED IF BIPOLAR, ARDUINO ANALOG IN IS ONLY RATED FROM 0V TO 5V
-const int DAC_1 = A4;
-const int DAC_2 = A5;
+const int_fast8_t DAC_1 = A4;
+const int_fast8_t DAC_2 = A5;
 
 
 ///////////////////////////
@@ -105,33 +109,33 @@ const int DAC_2 = A5;
 ///////////////////////////
 
 // R/W (write is active low)
-const char READ = 1;
-const char WRITE = 0;
+const int8_t READ = 1;
+const int8_t WRITE = 0;
 
 // Registers for controlling DAC
-const char DAC_REGISTER = 0;      // 000
-const char RANGE_REGISTER = 1;    // 001
-const char POWER_REGISTER = 2;    // 010
-const char CONTROL_REGISTER = 3;  // 011
+const int8_t DAC_REGISTER = 0;      // 000
+const int8_t RANGE_REGISTER = 1;    // 001
+const int8_t POWER_REGISTER = 2;    // 010
+const int8_t CONTROL_REGISTER = 3;  // 011
 
 // DAC channel addresses
-const char DAC_A = 0;     // 000
-const char DAC_B = 2;     // 010
-const char DAC_BOTH = 4;  // 100
+const int8_t DAC_A = 0;     // 000
+const int8_t DAC_B = 2;     // 010
+const int8_t DAC_BOTH = 4;  // 100
 
 // Control channel addresses
-const char NOP = 0;       // 000
-const char TOGGLES = 1;   // 001
-const char CLR = 4;       // 100
-const char LOAD = 5;      // 101
+const int8_t NOP = 0;       // 000
+const int8_t TOGGLES = 1;   // 001
+const int8_t CLR = 4;       // 100
+const int8_t LOAD = 5;      // 101
 
 // Output range select register
-const short UNI_5 = 0;    // 000
-const short UNI_10 = 1;   // 001
-const short UNI_108 = 2;  // 010
-const short BI_5 = 3;     // 011
-const short BI_10 = 4;    // 100
-const short BI_108 = 5;   // 101
+const int8_t UNI_5 = 0;    // 000
+const int8_t UNI_10 = 1;   // 001
+const int8_t UNI_108 = 2;  // 010
+const int8_t BI_5 = 3;     // 011
+const int8_t BI_10 = 4;    // 100
+const int8_t BI_108 = 5;   // 101
 
 // DAC's gain
 const double GAIN = 2;
@@ -160,9 +164,9 @@ void setup() {
 
 
   // Sets up output range
-  char rangeHeaderA = headerConstructor(WRITE, RANGE_REGISTER, DAC_A);        // I have to write to all 3 of these channels individually.
-  char rangeHeaderB = headerConstructor(WRITE, RANGE_REGISTER, DAC_B);        // Writing to "BOTH" apparently isn't enough smh.
-  char rangeHeaderBoth = headerConstructor(WRITE, RANGE_REGISTER, DAC_BOTH);
+  int8_t rangeHeaderA = headerConstructor(WRITE, RANGE_REGISTER, DAC_A);        // I have to write to all 3 of these channels individually.
+  int8_t rangeHeaderB = headerConstructor(WRITE, RANGE_REGISTER, DAC_B);        // Writing to "BOTH" apparently isn't enough smh.
+  int8_t rangeHeaderBoth = headerConstructor(WRITE, RANGE_REGISTER, DAC_BOTH);
   if (BIPOLAR){
     sendData(rangeHeaderA, BI_5, DEFAULT_SETTINGS);
     sendData(rangeHeaderB, BI_5, DEFAULT_SETTINGS);
@@ -176,7 +180,7 @@ void setup() {
 
 
   // Sets up DAC preferences
-  char controlToggleHeader = headerConstructor(WRITE, CONTROL_REGISTER, TOGGLES);
+  int8_t controlToggleHeader = headerConstructor(WRITE, CONTROL_REGISTER, TOGGLES);
   /* CONTROL TOGGLES OPERATION GUIDE
    * 
    * Thermal SD       0 = No thermal shutdown         1 = Enable thermal shutdown
@@ -188,12 +192,12 @@ void setup() {
    * ----------------------------------------------------------
    * 1            | 0             | 0             | 0
    */
-  short controlToggleData = 4;
+  int16_t controlToggleData = 4;
   sendData(controlToggleHeader, controlToggleData, DEFAULT_SETTINGS);
   
 
   // Powers up the DAC channels
-  char powerHeader = headerConstructor(WRITE, POWER_REGISTER, short(0));
+  int8_t powerHeader = headerConstructor(WRITE, POWER_REGISTER, int16_t(0));
   /* POWER OPERATION GUIDE
    * 
    * Data bits are as follows:
@@ -208,13 +212,13 @@ void setup() {
    * To power up both DACs, I will send as follows:
    * 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 1
    */
-  short powerData = 5;
+  int16_t powerData = 5;
   sendData(powerHeader, powerData, DEFAULT_SETTINGS);
 
 
   // Sends the function to update and load the DAC data
-  char loadHeader = headerConstructor(WRITE, CONTROL_REGISTER, LOAD);
-  sendData(loadHeader, short(0), DEFAULT_SETTINGS);
+  int8_t loadHeader = headerConstructor(WRITE, CONTROL_REGISTER, LOAD);
+  sendData(loadHeader, int16_t(0), DEFAULT_SETTINGS);
 
 
   // Slight delay before sending the data to the DAC repeatedly in the loop
@@ -237,8 +241,8 @@ void loop() {
   setOutput(voltageCompensated1, voltageCompensated2, REFERENCE_VOLTAGE, DEFAULT_SETTINGS, BIPOLAR);
   
   // For loading the data
-  char loadHeader = headerConstructor(WRITE, CONTROL_REGISTER, LOAD);
-  sendData(loadHeader, short(0), DEFAULT_SETTINGS);
+  int8_t loadHeader = headerConstructor(WRITE, CONTROL_REGISTER, LOAD);
+  sendData(loadHeader, int16_t(0), DEFAULT_SETTINGS);
 
   // Prints the data from the two read-in pins for debugging
   Serial.println(analogRead(DAC_1));
@@ -261,13 +265,13 @@ void loop() {
 void setOutput(double desired1, double desired2, double reference, SPISettings settings, bool bipolar){
 
   // Creates an 8-bit header to send to the chip to show where it is writing its information to
-  char header = headerConstructor(0, 0, 0);   // Write is active low, DAC register is 000, dacChannel is set to 0 to initialize
+  int8_t header = headerConstructor(0, 0, 0);   // Write is active low, DAC register is 000, dacChannel is set to 0 to initialize
 
   // Calculates the bits of data to send to the DAC
-  short bits1 = calcOutput(desired1, reference, bipolar);
-  short bits2 = calcOutput(desired2, reference, bipolar);
+  int16_t bits1 = calcOutput(desired1, reference, bipolar);
+  int16_t bits2 = calcOutput(desired2, reference, bipolar);
 
-  char dacChannel;
+  int8_t dacChannel;
   
   // checks if the two variables are exactly the same (e.g. calling setOutput(DESIRED_VOLTAGE_1, DESIRED_VOLTAGE_1, ...)) and uses the 'Both' address
   if (desired1 == desired2){
@@ -295,7 +299,7 @@ void setOutput(double desired1, double desired2, double reference, SPISettings s
 
 // Calculates what integer level to set as the output based on the ratio between the desired voltage to get from the DAC and the DAC's
 // reference voltage, taking a ratio of the two floating point numbers and multiplying by the constant number of bits the DAC can handle
-short calcOutput(double voltage, double reference, bool bipolar){
+int16_t calcOutput(double voltage, double reference, bool bipolar){
   double fraction;
 
   // Offsets the fraction based on if the DAC mode is bipolar or not
@@ -306,7 +310,7 @@ short calcOutput(double voltage, double reference, bool bipolar){
     fraction = voltage / reference;    
   }
   
-  short shortboi = short(fraction * pow(2,BITS)); 
+  int16_t shortboi = int16_t(fraction * pow(2,BITS)); 
   shortboi = shortboi << (MAX_BITS - BITS);         // Bit shifts appropriate amount to account for dummy bits
   
   return shortboi;
@@ -314,7 +318,7 @@ short calcOutput(double voltage, double reference, bool bipolar){
 
 
 // sends 24-bit sequence to the DAC
-void sendData(char header, short data, SPISettings settings){
+void sendData(int8_t header, int16_t data, SPISettings settings){
   SPI.beginTransaction(settings);
   digitalWrite(SS, LOW);
   SPI.transfer(header);
@@ -326,8 +330,8 @@ void sendData(char header, short data, SPISettings settings){
 }
 
 // returns an 8 bit header to send to the DAC before the data
-char headerConstructor(char readWrite, char dacRegister, char channel){
-  char header;
+int8_t headerConstructor(int8_t readWrite, int8_t dacRegister, int8_t channel){
+  int8_t header;
   
   header = readWrite << 7;      // RW logic bit
   header += 0 << 6;             // Reserved 0
