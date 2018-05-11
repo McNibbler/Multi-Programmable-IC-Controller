@@ -1,5 +1,5 @@
 /* DAC Controller (GUI Interfaced Controller)
- * Version: 0.1
+ * Version: Alpha 0.1
  * 
  * Thomas Kaunzinger
  * Xcerra Corp.
@@ -159,7 +159,6 @@ void setup() {
   Serial.begin(9600);       // Starts serial communication through USB for debugging
   SPI.begin();              // Initializes the SPI protocol
 
-
 }
 
 ////////////////////
@@ -182,11 +181,8 @@ void loop() {
     if (newDataEntry == DONE){
       executeCommand(currentCommand);
       purge(currentCommand);
-  
     }
-    
   }
-
 }
 
 //////////////////////
@@ -230,8 +226,8 @@ void executeCommand(QueueArray <int8_t> &command){
   purge(command);               // Purges whatever is left of the command
 
   sendData(header, data, DEFAULT_SETTINGS);   // Function to send the data to the DAC. Only reaches here if the whole command is valid.
+  loadDataDAC();
   
-  Serial.println("data loaded");
 }
 
 
@@ -335,7 +331,9 @@ void runSetup(int8_t polarity){
   int8_t loadHeader = headerConstructor(WRITE_BIN, CONTROL_REGISTER_BIN, LOAD_BIN);
   sendData(loadHeader, int16_t(0), DEFAULT_SETTINGS);
 
-  Serial.println("startup loaded");
+
+  // Loads up what's in the buffer
+  loadDataDAC();
 
 
   // Slight delay
@@ -344,6 +342,11 @@ void runSetup(int8_t polarity){
 }
 
 
+// Sends the function to update and load the DAC data
+void loadDataDAC (){
+  int8_t loadHeader = headerConstructor(WRITE_BIN, CONTROL_REGISTER_BIN, LOAD_BIN);
+  sendData(loadHeader, int16_t(0), DEFAULT_SETTINGS);
+}
 
 
 
