@@ -53,19 +53,32 @@ class Application(QWidget):
         self.connect_sliders_checkbox.stateChanged.connect(self.tie_outputs)
 
         # Voltage sliders
+        self.iterator = 10000
+        self.bipolar_range = range(-5*self.iterator, 5*self.iterator + 1, 1)
+        self.unipolar_range = range(0*self.iterator, 5*self.iterator + 1, 1)
+
         self.voltage_label_a = QLabel()
         self.voltage_label_a.setText('DAC A')
         self.voltage_textbox_a = QLineEdit()
         self.voltage_textbox_a.setText(str(0.0))
+        self.voltage_textbox_a.returnPressed.connect(self.update_sliders)
         self.voltage_slider_a = QSlider(Qt.Horizontal)
+        self.voltage_slider_a.setRange(min(self.bipolar_range), max(self.bipolar_range))
         self.voltage_slider_a.valueChanged[int].connect(self.change_voltage)
 
         self.voltage_label_b = QLabel()
         self.voltage_label_b.setText('DAC B')
         self.voltage_textbox_b = QLineEdit()
         self.voltage_textbox_b.setText(str(0.0))
+        self.voltage_textbox_b.returnPressed.connect(self.update_sliders)
         self.voltage_slider_b = QSlider(Qt.Horizontal)
+        self.voltage_slider_b.setRange(min(self.bipolar_range), max(self.bipolar_range))
         self.voltage_slider_b.valueChanged[int].connect(self.change_voltage)
+
+        # Input text boxes for voltage
+        self.only_double = QDoubleValidator()
+        self.voltage_textbox_a.setValidator(self.only_double)
+        self.voltage_textbox_b.setValidator(self.only_double)
 
         # Readback
         self.readback_label = QLabel()
@@ -76,9 +89,11 @@ class Application(QWidget):
         self.readback_b.setText(str('DAC B: ' + str(0.0) + 'V'))
 
         # Window dimensions
-        self.WINDOW_SIZE = (275, 200)
+        self.WINDOW_SIZE = (300, 200)
         self.setFixedSize(self.WINDOW_SIZE[0], self.WINDOW_SIZE[1])
         self.setWindowTitle('DAC Controller')
+
+        self.is_bipolar = True
 
         self.main_window()
 
@@ -117,11 +132,45 @@ class Application(QWidget):
 
     # Select between bipolar mode and unipolar
     def bipolar_toggle(self):
-        pass
 
-    # Slider to select voltage
+        if self.is_bipolar:
+            self.is_bipolar = False
+            self.voltage_slider_a.setRange(min(self.unipolar_range), max(self.unipolar_range))
+            self.voltage_slider_b.setRange(min(self.unipolar_range), max(self.unipolar_range))
+        else:
+            self.is_bipolar = True
+            self.voltage_slider_a.setRange(min(self.bipolar_range), max(self.bipolar_range))
+            self.voltage_slider_b.setRange(min(self.bipolar_range), max(self.bipolar_range))
+
+        self.voltage_textbox_a.setText(str(0.0))
+        self.voltage_textbox_b.setText(str(0.0))
+        self.voltage_slider_a.setSliderPosition(0)
+        self.voltage_slider_b.setSliderPosition(0)
+
+    # Handler for when the slider is changed
     def change_voltage(self):
-        pass
+        new_voltage_a = self.voltage_slider_a.value() / self.iterator
+        new_voltage_b = self.voltage_slider_b.value() / self.iterator
+
+        self.voltage_textbox_a.setText(str(new_voltage_a))
+        self.voltage_textbox_b.setText(str(new_voltage_b))
+
+    # Handler for when the text is changed and the sliders need to be updated
+    def update_sliders(self):
+        new_voltage_a = float(self.voltage_textbox_a.text())
+        new_voltage_b = float(self.voltage_textbox_b.text())
+
+        if self.is_bipolar:
+            if new_voltage_a > 5 or new_voltage_b > 5 or new_voltage_a < -5 or new_voltage_b < -5:
+                self.status_text.setText('Bad Input')
+                return
+        else:
+            if new_voltage_a > 5 or new_voltage_b > 5 or new_voltage_a < 0 or new_voltage_b < 0:
+                self.status_text.setText('Bad Input')
+                return
+
+        self.voltage_slider_a.setValue(int(new_voltage_a * self.iterator))
+        self.voltage_slider_b.setValue(int(new_voltage_b * self.iterator))
 
     # Sends the setup command to the DAC
     def setup(self):
@@ -140,5 +189,3 @@ if __name__ == '__main__':
     nice = Application()
 
     sys.exit(app.exec_())
-
-
