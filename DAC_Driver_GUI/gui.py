@@ -18,13 +18,15 @@ import sys
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
-
+import controller
 
 ###################################################
 
 ########################
 # QT GUI FUNCTIONALITY #
 ########################
+
+controller.boobs()
 
 class Application(QWidget):
 
@@ -42,7 +44,7 @@ class Application(QWidget):
         self.setup_button.clicked.connect(self.setup)
 
         # Selects bipolar mode
-        self.bipolar_checkbox = QCheckBox('Bipolar Range')
+        self.bipolar_checkbox = QCheckBox('Bipolar')
         self.bipolar_checkbox.toggle()
         self.bipolar_checkbox.setToolTip('Toggle between monopolar and bipolar voltage ranges')
         self.bipolar_checkbox.stateChanged.connect(self.bipolar_toggle)
@@ -52,10 +54,31 @@ class Application(QWidget):
         self.connect_sliders_checkbox.setToolTip('Make the voltage of DAC B be the same as DAC A')
         self.connect_sliders_checkbox.stateChanged.connect(self.tie_outputs)
 
+        # Sets the reference voltage
+
+        self.reference_voltage = 2.5
+        self.gain = 2.0
+
+        self.reference_label = QLabel()
+        self.reference_label.setText('Ref (V):')
+        self.reference_textbox = QLineEdit()
+        self.reference_textbox.setText(str(self.reference_voltage))
+        self.reference_textbox.returnPressed.connect(self.update_ranges)
+
+        self.gain_label = QLabel()
+        self.gain_label.setText('Gain:')
+        self.gain_modes = [str(self.gain), str(4.0), str(4.32)]
+        self.gain_select = QComboBox()
+        self.gain_select.addItems(self.gain_modes)
+        self.gain_select.activated[str].connect(self.update_ranges)
+
+
+
         # Voltage sliders
-        self.iterator = 10000
-        self.bipolar_range = range(-5*self.iterator, 5*self.iterator + 1, 1)
-        self.unipolar_range = range(0*self.iterator, 5*self.iterator + 1, 1)
+        self.iterator = 100000
+        self.bipolar_range = range(int(-1*self.gain*self.reference_voltage*self.iterator),
+                                   int(self.gain*self.reference_voltage*self.iterator + 1), 1)
+        self.unipolar_range = range(0, int(self.gain*self.reference_voltage*self.iterator + 1), 1)
 
         self.voltage_label_a = QLabel()
         self.voltage_label_a.setText('DAC A')
@@ -91,7 +114,7 @@ class Application(QWidget):
         self.readback_b.setText(str('DAC B: ' + str(0.0) + 'V'))
 
         # Window dimensions
-        self.WINDOW_SIZE = (300, 200)
+        self.WINDOW_SIZE = (300, 250)
         self.setFixedSize(self.WINDOW_SIZE[0], self.WINDOW_SIZE[1])
         self.setWindowTitle('DAC Controller')
 
@@ -110,22 +133,27 @@ class Application(QWidget):
         layout.addWidget(self.bipolar_checkbox, 0, 2, 1, 1)
         layout.addWidget(self.connect_sliders_checkbox, 0, 3, 1, 1)
 
-        layout.addWidget(self.setup_button, 1, 0, 1, 4)
+        layout.addWidget(self.reference_label, 1, 0, 1, 1)
+        layout.addWidget(self.reference_textbox, 1, 1, 1, 1)
+        layout.addWidget(self.gain_label, 1, 2, 1, 1)
+        layout.addWidget(self.gain_select, 1, 3, 1, 1)
 
-        layout.addWidget(self.voltage_label_a, 2, 0, 1, 3)
-        layout.addWidget(self.voltage_textbox_a, 2, 3, 1, 1)
+        layout.addWidget(self.setup_button, 2, 0, 1, 4)
 
-        layout.addWidget(self.voltage_slider_a, 3, 0, 1, 4)
+        layout.addWidget(self.voltage_label_a, 3, 0, 1, 3)
+        layout.addWidget(self.voltage_textbox_a, 3, 3, 1, 1)
 
-        layout.addWidget(self.voltage_label_b, 4, 0, 1, 3)
-        layout.addWidget(self.voltage_textbox_b, 4, 3, 1, 1)
+        layout.addWidget(self.voltage_slider_a, 4, 0, 1, 4)
 
-        layout.addWidget(self.voltage_slider_b, 5, 0, 1, 4)
+        layout.addWidget(self.voltage_label_b, 5, 0, 1, 3)
+        layout.addWidget(self.voltage_textbox_b, 5, 3, 1, 1)
 
-        layout.addWidget(self.readback_label, 6, 0, 1, 4)
+        layout.addWidget(self.voltage_slider_b, 6, 0, 1, 4)
 
-        layout.addWidget(self.readback_a, 7, 0, 1, 2)
-        layout.addWidget(self.readback_b, 7, 3, 1, 2)
+        layout.addWidget(self.readback_label, 7, 0, 1, 4)
+
+        layout.addWidget(self.readback_a, 8, 0, 1, 2)
+        layout.addWidget(self.readback_b, 8, 3, 1, 2)
 
         self.show()
 
@@ -179,11 +207,16 @@ class Application(QWidget):
         new_voltage_b = float(self.voltage_textbox_b.text())
 
         if self.is_bipolar:
-            if new_voltage_a > 5 or new_voltage_b > 5 or new_voltage_a < -5 or new_voltage_b < -5:
+            if (new_voltage_a > self.gain*self.reference_voltage
+                    or new_voltage_b > self.gain*self.reference_voltage
+                    or new_voltage_a < -1*self.gain*self.reference_voltage
+                    or new_voltage_b < -1*self.gain*self.reference_voltage):
                 self.status_text.setText('Bad Input')
                 return
         else:
-            if new_voltage_a > 5 or new_voltage_b > 5 or new_voltage_a < 0 or new_voltage_b < 0:
+            if (new_voltage_a > self.gain*self.reference_voltage
+                    or new_voltage_b > self.gain*self.reference_voltage
+                    or new_voltage_a < 0 or new_voltage_b < 0):
                 self.status_text.setText('Bad Input')
                 return
 
@@ -196,6 +229,31 @@ class Application(QWidget):
         else:
             # WRITE CODE HERE TO SEND VOLTAGE TO THE DACS THROUGH THE INDIVIDUAL REGISTERS
             pass
+
+    def update_ranges(self):
+        if float(self.reference_textbox.text()) > 3 or float(self.reference_textbox.text()) < 2:
+            self.status_text.setText('Invalid Ref')
+            return
+
+        self.reference_voltage = float(self.reference_textbox.text())
+        self.gain = float(self.gain_select.currentText())
+
+        self.voltage_textbox_a.setText(str(0.0))
+        self.voltage_textbox_b.setText(str(0.0))
+        self.voltage_slider_a.setValue(0)
+        self.voltage_slider_b.setValue(0)
+
+        self.bipolar_range = range(int(-1 * self.gain * self.reference_voltage * self.iterator),
+                                   int(self.gain * self.reference_voltage * self.iterator + 1), 1)
+        self.unipolar_range = range(0, int(self.gain * self.reference_voltage * self.iterator + 1), 1)
+
+        if self.is_bipolar:
+            self.voltage_slider_a.setRange(min(self.bipolar_range), max(self.bipolar_range))
+            self.voltage_slider_b.setRange(min(self.bipolar_range), max(self.bipolar_range))
+        else:
+            self.voltage_slider_a.setRange(min(self.unipolar_range), max(self.unipolar_range))
+            self.voltage_slider_b.setRange(min(self.unipolar_range), max(self.unipolar_range))
+
 
     # Sends the setup command to the DAC
     def setup(self):
