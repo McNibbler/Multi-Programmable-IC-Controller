@@ -20,13 +20,12 @@ from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 import controller
 
+
 ###################################################
 
 ########################
 # QT GUI FUNCTIONALITY #
 ########################
-
-controller.boobs()
 
 class Application(QWidget):
 

@@ -221,9 +221,17 @@ void executeCommand(QueueArray <int8_t> &command){
 
   command.pop();  // Clears out the already executed piece of the command
 
+  Serial.println(header);
+
+  Serial.println(command.front());
+  
   data += command.pop() << 8;   // First 8 bits of the data
+  
+  Serial.println(command.front());
+  
   data += command.pop();        // Rest of the 8 bits of the data
   purge(command);               // Purges whatever is left of the command
+  
 
   sendData(header, data, DEFAULT_SETTINGS);   // Function to send the data to the DAC. Only reaches here if the whole command is valid.
   loadDataDAC();
