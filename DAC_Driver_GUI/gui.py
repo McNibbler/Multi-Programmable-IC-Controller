@@ -18,6 +18,8 @@ import sys
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
+
+from pyduino import *
 import controller
 
 
@@ -223,11 +225,13 @@ class Application(QWidget):
         self.voltage_slider_b.setValue(int(new_voltage_b * self.iterator))
 
         if self.is_tied:
-            # WRITE CODE HERE TO SEND VOLTAGE TO THE DACS THROUGH THE 'BOTH' REGISTER
-            pass
+            controller.send_voltage(controller.DAC_2,
+                                    self.voltage_slider_a.value(), self.reference_voltage, self.gain, self.is_bipolar)
         else:
-            # WRITE CODE HERE TO SEND VOLTAGE TO THE DACS THROUGH THE INDIVIDUAL REGISTERS
-            pass
+            controller.send_voltage(controller.DAC_A,
+                                    self.voltage_slider_a.value(), self.reference_voltage, self.gain, self.is_bipolar)
+            controller.send_voltage(controller.DAC_B,
+                                    self.voltage_slider_a.value(), self.reference_voltage, self.gain, self.is_bipolar)
 
     def update_ranges(self):
         if float(self.reference_textbox.text()) > 3 or float(self.reference_textbox.text()) < 2:
@@ -262,11 +266,13 @@ class Application(QWidget):
     # Sends update commands to the DAC upon releasing the slider
     def send_slider(self):
         if self.is_tied:
-            # WRITE CODE HERE TO SEND VOLTAGE TO THE DACS THROUGH THE 'BOTH' REGISTER
-            pass
+            controller.send_voltage(controller.DAC_2,
+                                    self.voltage_slider_a.value(), self.reference_voltage, self.gain, self.is_bipolar)
         else:
-            # WRITE CODE HERE TO SEND VOLTAGE TO THE DACS THROUGH THE INDIVIDUAL REGISTERS
-            pass
+            controller.send_voltage(controller.DAC_A,
+                                    self.voltage_slider_a.value(), self.reference_voltage, self.gain, self.is_bipolar)
+            controller.send_voltage(controller.DAC_B,
+                                    self.voltage_slider_a.value(), self.reference_voltage, self.gain, self.is_bipolar)
 
 
 ###################################################

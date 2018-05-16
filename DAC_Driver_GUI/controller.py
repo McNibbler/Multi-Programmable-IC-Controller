@@ -14,19 +14,28 @@
 ###########
 
 from abc import ABC
-import pyduino
+from pyduino import *
+import time
 
 
 #############
 # FUNCTIONS #
 #############
 
-def boobs():
-
-    print('boobs')
+# Sends a voltage command
+def send_voltage(address, desired_voltage, reference_voltage, gain, bipolar):
+    send_command(make_voltage_command(address, desired_voltage, reference_voltage, gain, bipolar))
 
 
 if __name__ == '__main__':
 
-    pass
+    desire = -3.74389648438
+    ref = 2.5
+    gain = 2
+    bi = True
+
+    time.sleep(2)
+
+    send_voltage(DAC_2, desire, ref, gain, bi)
+
 
