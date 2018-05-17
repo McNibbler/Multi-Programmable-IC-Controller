@@ -73,6 +73,19 @@ class Application(QWidget):
         self.gain_select.addItems(self.gain_modes)
         self.gain_select.activated[str].connect(self.update_ranges)
 
+        # COM port select
+        self.com_select = QComboBox()
+        self.com_ports = list(controller.COM_PORTS_LIST)
+        self.com_select.addItems(self.com_ports)
+
+        initial_select = 0
+        for i in range(0, len(self.com_ports)):
+            if controller.com_port == self.com_ports[i]:
+                initial_select = i
+
+        self.com_select.setCurrentIndex(initial_select)
+        self.com_select.activated[str].connect(self.change_com)
+
         # Voltage sliders
         self.iterator = 100000
         self.bipolar_range = range(int(-1*self.gain*self.reference_voltage*self.iterator),
@@ -113,7 +126,7 @@ class Application(QWidget):
         self.readback_b.setText(str('DAC B: ' + str(0.0) + 'V'))
 
         # Window dimensions
-        self.WINDOW_SIZE = (300, 250)
+        self.WINDOW_SIZE = (325, 250)
         self.setFixedSize(self.WINDOW_SIZE[0], self.WINDOW_SIZE[1])
         self.setWindowTitle('DAC Controller')
 
@@ -128,7 +141,8 @@ class Application(QWidget):
         layout = QGridLayout()
         self.setLayout(layout)
 
-        layout.addWidget(self.status_text, 0, 0, 1, 2)
+        layout.addWidget(self.status_text, 0, 0, 1, 1)
+        layout.addWidget(self.com_select, 0, 1, 1, 1)
         layout.addWidget(self.bipolar_checkbox, 0, 2, 1, 1)
         layout.addWidget(self.connect_sliders_checkbox, 0, 3, 1, 1)
 
@@ -279,6 +293,9 @@ class Application(QWidget):
             controller.send_voltage(controller.DAC_B,
                                     self.voltage_slider_b.value() / self.iterator,
                                     self.reference_voltage, self.gain, self.is_bipolar)
+
+    def change_com(self):
+        controller.set_com(self.com_select.currentText())
 
 
 ###################################################

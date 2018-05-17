@@ -13,8 +13,10 @@
 # IMPORTS #
 ###########
 
+import serial
 from abc import ABC
 from pyduino import *
+import pyduino
 import time
 
 
@@ -43,17 +45,22 @@ def send_initialization(is_bipolar, gain):
     elif str(gain) == '4.32':
         gain = GAIN_432
 
-    command = str(DAC_INDICATOR + START + polarity + gain + DONE)
+    command = str(
+        DAC_INDICATOR + START + polarity + gain + DONE)
     send_command(command)
 
 
+# Use to set the COM Port being used
+def set_com(port):
+    pyduino.serial_port.close()
+    pyduino.serial_port = serial.Serial(port=port, baudrate=9600)
+
+
+#############
+# EXECUTION #
+#############
+
+# Testing stuff that doesn't normally get run cus it's a library
 if __name__ == '__main__':
 
-    desire = 3
-    ref = 2.5
-    gain = 2
-    bi = True
-
-    time.sleep(2)
-
-    send_voltage(DAC_2, desire, ref, gain, bi)
+    pass

@@ -9,8 +9,11 @@
 # controller.                           #
 #########################################
 
-import serial
-import math
+###########
+# IMPORTS #
+###########
+
+import serial.tools.list_ports
 
 
 #############
@@ -48,7 +51,16 @@ MAX_BITS = 16
 
 # SERIAL SETUP #
 # This needs to be able to change
-com_port = 'COM4'   # Can be different
+
+com_port = 'COM4'   # Default
+
+# Finds the last com port with the word "arduino" in the device settings and defaults that instead
+ports = list(serial.tools.list_ports.comports())
+
+COM_PORTS_LIST = []
+for p in ports:
+    COM_PORTS_LIST.append(p.device)
+
 serial_port = serial.Serial(port=com_port, baudrate=9600)
 
 
