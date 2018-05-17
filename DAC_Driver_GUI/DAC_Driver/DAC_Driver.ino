@@ -93,33 +93,33 @@ SPISettings DEFAULT_SETTINGS(CLOCK_SPEED, MSBFIRST, SPI_MODE2);
 ///////////////////////////
 
 // R/W (write is active low)
-const int8_t READ_BIN = 1;
-const int8_t WRITE_BIN = 0;
+const uint8_t READ_BIN = 1;
+const uint8_t WRITE_BIN = 0;
 
 // Registers for controlling DAC
-const int8_t DAC_REGISTER_BIN = 0;      // 000
-const int8_t RANGE_REGISTER_BIN = 1;    // 001
-const int8_t POWER_REGISTER_BIN = 2;    // 010
-const int8_t CONTROL_REGISTER_BIN = 3;  // 011
+const uint8_t DAC_REGISTER_BIN = 0;      // 000
+const uint8_t RANGE_REGISTER_BIN = 1;    // 001
+const uint8_t POWER_REGISTER_BIN = 2;    // 010
+const uint8_t CONTROL_REGISTER_BIN = 3;  // 011
 
 // DAC channel addresses
-const int8_t DAC_A_BIN = 0;     // 000
-const int8_t DAC_B_BIN = 2;     // 010
-const int8_t DAC_2_BIN = 4;     // 100
+const uint8_t DAC_A_BIN = 0;     // 000
+const uint8_t DAC_B_BIN = 2;     // 010
+const uint8_t DAC_2_BIN = 4;     // 100
 
 // Control channel addresses
-const int8_t NOP_BIN = 0;       // 000
-const int8_t TOGGLES_BIN = 1;   // 001
-const int8_t CLR_BIN = 4;       // 100
-const int8_t LOAD_BIN = 5;      // 101
+const uint8_t NOP_BIN = 0;       // 000
+const uint8_t TOGGLES_BIN = 1;   // 001
+const uint8_t CLR_BIN = 4;       // 100
+const uint8_t LOAD_BIN = 5;      // 101
 
 // Output range select register
-const int8_t UNI_5_BIN = 0;    // 000
-const int8_t UNI_10_BIN= 1;   // 001
-const int8_t UNI_108_BIN = 2;  // 010
-const int8_t BI_5_BIN = 3;     // 011
-const int8_t BI_10_BIN = 4;    // 100
-const int8_t BI_108_BIN = 5;   // 101
+const uint8_t UNI_5_BIN = 0;    // 000
+const uint8_t UNI_10_BIN= 1;   // 001
+const uint8_t UNI_108_BIN = 2;  // 010
+const uint8_t BI_5_BIN = 3;     // 011
+const uint8_t BI_10_BIN = 4;    // 100
+const uint8_t BI_108_BIN = 5;   // 101
 
 // DAC's gain
 const double GAIN = 2;
@@ -130,18 +130,18 @@ const double GAIN = 2;
 /////////////////////////
 
 // Constant bytes that represent the characters being sent as commands
-const int8_t READ = 'r';
-const int8_t WRITE = 'w';
+const uint8_t READ = 'r';
+const uint8_t WRITE = 'w';
 
-const int8_t DAC_A = 'a';
-const int8_t DAC_B = 'b';
-const int8_t DAC_2 = '2';
+const uint8_t DAC_A = 'a';
+const uint8_t DAC_B = 'b';
+const uint8_t DAC_2 = '2';
 
-const int8_t START = 's';
-const int8_t BIPOLAR = 'b';
-const int8_t UNIPOLAR = 'u';
+const uint8_t START = 's';
+const uint8_t BIPOLAR = 'b';
+const uint8_t UNIPOLAR = 'u';
 
-const int8_t DONE = '!';
+const uint8_t DONE = '!';
 
 
 //////////////////////////////////////////////////////////////////////
@@ -166,17 +166,17 @@ void setup() {
 ////////////////////
 
 // Initializes the current command to be executed until the execution byte is sent
-QueueArray <int8_t> currentCommand;
+QueueArray <uint8_t> currentCommand;
 
 void loop() {
 
-  int8_t newDataEntry;
+  uint8_t newDataEntry;
   
   while (Serial.available() > 0){
 
     newDataEntry = Serial.read();
     currentCommand.push(newDataEntry);
-
+  
     // Executes when the termination statement is received
     if (newDataEntry == DONE){
       executeCommand(currentCommand);
@@ -189,14 +189,15 @@ void loop() {
 // COMMAND HANDLING //
 //////////////////////
 
-void executeCommand(QueueArray <int8_t> &command){
-  int8_t header;  // Initializes the data to send
-  int8_t rw;
-  int16_t data;
+void executeCommand(QueueArray <uint8_t> &command){
+  
+  uint8_t header;  // Initializes the data to send
+  uint8_t rw;
+  uint16_t data;
 
   if (command.front() == START){
     command.pop();
-    int8_t polarity = command.pop();
+    uint8_t polarity = command.pop();
     runSetup(polarity);
     purge(command);
     return;
@@ -208,6 +209,7 @@ void executeCommand(QueueArray <int8_t> &command){
     return;
   }
 
+  // Clears front
   command.pop();
 
   // Appends the DAC address to the header. Purges and ignores with with invalid syntax.
@@ -219,12 +221,15 @@ void executeCommand(QueueArray <int8_t> &command){
     return;
   }
 
-  command.pop();  // Clears out the already executed piece of the command
-  
-  data += command.pop() << 8;   // First 8 bits of the data
-  data += command.pop();        // Rest of the 8 bits of the data
-  purge(command);               // Purges whatever is left of the command
-  
+  // Clears front
+  command.pop();
+
+  // Converts the recieved string to work into an integer to send as data
+  String data_string;
+  while (command.front() != DONE){
+    data_string += (char)command.pop();
+  }
+  data = data_string.toInt();
 
   sendData(header, data, DEFAULT_SETTINGS);   // Function to send the data to the DAC. Only reaches here if the whole command is valid.
   loadDataDAC();
@@ -233,7 +238,7 @@ void executeCommand(QueueArray <int8_t> &command){
 
 
 // Empties a queue by popping everything in it. There's probably a faster way to do this.
-void purge(QueueArray <int8_t> &queue){
+void purge(QueueArray <uint8_t> &queue){
   while(!queue.isEmpty()) queue.pop();
 }
 
@@ -243,7 +248,7 @@ void purge(QueueArray <int8_t> &queue){
 ///////////////////////
 
 // sends 24-bit sequence to the DAC
-void sendData(int8_t header, int16_t data, SPISettings settings){
+void sendData(uint8_t header, uint16_t data, SPISettings settings){
   SPI.beginTransaction(settings);
   digitalWrite(SS, LOW);
   SPI.transfer(header);
@@ -256,8 +261,8 @@ void sendData(int8_t header, int16_t data, SPISettings settings){
 
 
 // returns an 8 bit header to send to the DAC before the data
-int8_t headerConstructor(int8_t readWrite, int8_t dacRegister, int8_t channel){
-  int8_t header;
+uint8_t headerConstructor(uint8_t readWrite, uint8_t dacRegister, uint8_t channel){
+  uint8_t header;
   
   header = readWrite << 7;      // RW logic bit
   header += 0 << 6;             // Reserved 0
@@ -267,7 +272,7 @@ int8_t headerConstructor(int8_t readWrite, int8_t dacRegister, int8_t channel){
   return header;
 }
 
-void runSetup(int8_t polarity){
+void runSetup(uint8_t polarity){
 
   // makes sure that the data is valid
   if (polarity != BIPOLAR && polarity != UNIPOLAR){
@@ -276,9 +281,9 @@ void runSetup(int8_t polarity){
   }
 
   // Sets up output range as bipolar or unipolar
-  int8_t rangeHeaderA = headerConstructor(WRITE_BIN, RANGE_REGISTER_BIN, DAC_A_BIN);        // I have to write to all 3 of these channels individually.
-  int8_t rangeHeaderB = headerConstructor(WRITE_BIN, RANGE_REGISTER_BIN, DAC_B_BIN);        // Writing to "BOTH" apparently isn't enough smh.
-  int8_t rangeHeaderBoth = headerConstructor(WRITE_BIN, RANGE_REGISTER_BIN, DAC_2_BIN);
+  uint8_t rangeHeaderA = headerConstructor(WRITE_BIN, RANGE_REGISTER_BIN, DAC_A_BIN);        // I have to write to all 3 of these channels individually.
+  uint8_t rangeHeaderB = headerConstructor(WRITE_BIN, RANGE_REGISTER_BIN, DAC_B_BIN);        // Writing to "BOTH" apparently isn't enough smh.
+  uint8_t rangeHeaderBoth = headerConstructor(WRITE_BIN, RANGE_REGISTER_BIN, DAC_2_BIN);
   if (polarity == BIPOLAR){
     sendData(rangeHeaderA, BI_5_BIN, DEFAULT_SETTINGS);
     sendData(rangeHeaderB, BI_5_BIN, DEFAULT_SETTINGS);
@@ -292,7 +297,7 @@ void runSetup(int8_t polarity){
 
 
   // Sets up DAC preferences
-  int8_t controlToggleHeader = headerConstructor(WRITE_BIN, CONTROL_REGISTER_BIN, TOGGLES_BIN);
+  uint8_t controlToggleHeader = headerConstructor(WRITE_BIN, CONTROL_REGISTER_BIN, TOGGLES_BIN);
   /* CONTROL TOGGLES OPERATION GUIDE
    * 
    * Thermal SD       0 = No thermal shutdown         1 = Enable thermal shutdown
@@ -304,12 +309,12 @@ void runSetup(int8_t polarity){
    * ----------------------------------------------------------
    * 1            | 0             | 0             | 0
    */
-  int16_t controlToggleData = 4;
+  uint16_t controlToggleData = 4;
   sendData(controlToggleHeader, controlToggleData, DEFAULT_SETTINGS);
 
 
   // Powers up the DAC channels
-  int8_t powerHeader = headerConstructor(WRITE_BIN, POWER_REGISTER_BIN, int16_t(0));
+  uint8_t powerHeader = headerConstructor(WRITE_BIN, POWER_REGISTER_BIN, uint16_t(0));
   /* POWER OPERATION GUIDE
    * 
    * Data bits are as follows:
@@ -324,13 +329,13 @@ void runSetup(int8_t polarity){
    * To power up both DACs, I will send as follows:
    * 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 1
    */
-  int16_t powerData = 5;
+  uint16_t powerData = 5;
   sendData(powerHeader, powerData, DEFAULT_SETTINGS);
   
 
   // Sends the function to update and load the DAC data
-  int8_t loadHeader = headerConstructor(WRITE_BIN, CONTROL_REGISTER_BIN, LOAD_BIN);
-  sendData(loadHeader, int16_t(0), DEFAULT_SETTINGS);
+  uint8_t loadHeader = headerConstructor(WRITE_BIN, CONTROL_REGISTER_BIN, LOAD_BIN);
+  sendData(loadHeader, uint16_t(0), DEFAULT_SETTINGS);
 
 
   // Loads up what's in the buffer
@@ -345,8 +350,8 @@ void runSetup(int8_t polarity){
 
 // Sends the function to update and load the DAC data
 void loadDataDAC (){
-  int8_t loadHeader = headerConstructor(WRITE_BIN, CONTROL_REGISTER_BIN, LOAD_BIN);
-  sendData(loadHeader, int16_t(0), DEFAULT_SETTINGS);
+  uint8_t loadHeader = headerConstructor(WRITE_BIN, CONTROL_REGISTER_BIN, LOAD_BIN);
+  sendData(loadHeader, uint16_t(0), DEFAULT_SETTINGS);
 }
 
 

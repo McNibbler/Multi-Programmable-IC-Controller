@@ -10,6 +10,7 @@
 #########################################
 
 import serial
+import math
 
 
 #############
@@ -50,9 +51,9 @@ def make_voltage_command(address, desired_voltage, reference_voltage, gain, bipo
     instructions = WRITE
     instructions = str(instructions + address)
 
-    data = calculate_bits(desired_voltage, reference_voltage, gain, bipolar)
+    data = str(calculate_bits(desired_voltage, reference_voltage, gain, bipolar))
 
-    command = (instructions, data)
+    command = str(instructions + data + DONE)
 
     return command
 
@@ -65,12 +66,11 @@ def calculate_bits(desired_voltage: float, reference_voltage: float, gain: float
     else:
         fraction = (desired_voltage / reference_voltage) / gain
 
-    data = int(fraction * (1 << BITS)) << (MAX_BITS - BITS)
+    data = int(fraction * (1 << BITS)) * (1 << (MAX_BITS - BITS))
 
-    mask = 0xFFFF
-    short_data = data & mask
+    print(data)
 
-    return short_data
+    return data
 
 
 #########################
@@ -78,17 +78,10 @@ def calculate_bits(desired_voltage: float, reference_voltage: float, gain: float
 #########################
 
 # Sends a written command
-def send_command(command: tuple):
+def send_command(command: str):
 
-    data_first = command[1] >> 8
-    data_second = command[1] - (data_first << 8)
-
-    serial_port.write(command[0].encode())
-
-    serial_port.write(chr(data_first).encode())
-    serial_port.write(chr(data_second).encode())
-
-    serial_port.write(DONE.encode())
+    print(command)
+    serial_port.write(command.encode())
 
 
 #############

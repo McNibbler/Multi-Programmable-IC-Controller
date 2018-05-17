@@ -29,7 +29,7 @@ def send_voltage(address, desired_voltage, reference_voltage, gain, bipolar):
 
 if __name__ == '__main__':
 
-    desire = -3.74389648438
+    desire = 3
     ref = 2.5
     gain = 2
     bi = True
@@ -37,5 +37,3 @@ if __name__ == '__main__':
     time.sleep(2)
 
     send_voltage(DAC_2, desire, ref, gain, bi)
-
-
