@@ -73,13 +73,11 @@ class Application(QWidget):
         self.gain_select.addItems(self.gain_modes)
         self.gain_select.activated[str].connect(self.update_ranges)
 
-
-
         # Voltage sliders
         self.iterator = 100000
         self.bipolar_range = range(int(-1*self.gain*self.reference_voltage*self.iterator),
-                                   int(self.gain*self.reference_voltage*self.iterator + 1), 1)
-        self.unipolar_range = range(0, int(self.gain*self.reference_voltage*self.iterator + 1), 1)
+                                   int(self.gain*self.reference_voltage*self.iterator), 1)
+        self.unipolar_range = range(0, int(self.gain*self.reference_voltage*self.iterator), 1)
 
         self.voltage_label_a = QLabel()
         self.voltage_label_a.setText('DAC A')
@@ -192,6 +190,8 @@ class Application(QWidget):
         self.voltage_slider_a.setSliderPosition(0)
         self.voltage_slider_b.setSliderPosition(0)
 
+        controller.send_initialization(self.is_bipolar, self.gain)
+
     # Handler for when the slider is changed
     def change_voltage(self):
 
@@ -226,12 +226,15 @@ class Application(QWidget):
 
         if self.is_tied:
             controller.send_voltage(controller.DAC_2,
-                                    self.voltage_slider_a.value(), self.reference_voltage, self.gain, self.is_bipolar)
+                                    self.voltage_slider_a.value() / self.iterator,
+                                    self.reference_voltage, self.gain, self.is_bipolar)
         else:
             controller.send_voltage(controller.DAC_A,
-                                    self.voltage_slider_a.value(), self.reference_voltage, self.gain, self.is_bipolar)
+                                    self.voltage_slider_a.value() / self.iterator,
+                                    self.reference_voltage, self.gain, self.is_bipolar)
             controller.send_voltage(controller.DAC_B,
-                                    self.voltage_slider_a.value(), self.reference_voltage, self.gain, self.is_bipolar)
+                                    self.voltage_slider_b.value() / self.iterator,
+                                    self.reference_voltage, self.gain, self.is_bipolar)
 
     def update_ranges(self):
         if float(self.reference_textbox.text()) > 3 or float(self.reference_textbox.text()) < 2:
@@ -247,8 +250,8 @@ class Application(QWidget):
         self.voltage_slider_b.setValue(0)
 
         self.bipolar_range = range(int(-1 * self.gain * self.reference_voltage * self.iterator),
-                                   int(self.gain * self.reference_voltage * self.iterator + 1), 1)
-        self.unipolar_range = range(0, int(self.gain * self.reference_voltage * self.iterator + 1), 1)
+                                   int(self.gain * self.reference_voltage * self.iterator), 1)
+        self.unipolar_range = range(0, int(self.gain * self.reference_voltage * self.iterator), 1)
 
         if self.is_bipolar:
             self.voltage_slider_a.setRange(min(self.bipolar_range), max(self.bipolar_range))
@@ -257,22 +260,25 @@ class Application(QWidget):
             self.voltage_slider_a.setRange(min(self.unipolar_range), max(self.unipolar_range))
             self.voltage_slider_b.setRange(min(self.unipolar_range), max(self.unipolar_range))
 
+        controller.send_initialization(self.is_bipolar, self.gain)
 
     # Sends the setup command to the DAC
     def setup(self):
-        # WRITE CODE HERE TO SEND THE SETUP PROCESS TO THE DAC
-        pass
+        controller.send_initialization(self.is_bipolar, self.gain)
 
     # Sends update commands to the DAC upon releasing the slider
     def send_slider(self):
         if self.is_tied:
             controller.send_voltage(controller.DAC_2,
-                                    self.voltage_slider_a.value(), self.reference_voltage, self.gain, self.is_bipolar)
+                                    self.voltage_slider_a.value() / self.iterator,
+                                    self.reference_voltage, self.gain, self.is_bipolar)
         else:
             controller.send_voltage(controller.DAC_A,
-                                    self.voltage_slider_a.value(), self.reference_voltage, self.gain, self.is_bipolar)
+                                    self.voltage_slider_a.value() / self.iterator,
+                                    self.reference_voltage, self.gain, self.is_bipolar)
             controller.send_voltage(controller.DAC_B,
-                                    self.voltage_slider_a.value(), self.reference_voltage, self.gain, self.is_bipolar)
+                                    self.voltage_slider_b.value() / self.iterator,
+                                    self.reference_voltage, self.gain, self.is_bipolar)
 
 
 ###################################################

@@ -18,6 +18,9 @@ import math
 #############
 
 # COMMANDS #
+# Device indicator
+DAC_INDICATOR = 'D'
+
 # r/w
 READ = 'r'
 WRITE = 'w'
@@ -26,6 +29,14 @@ WRITE = 'w'
 DAC_A = 'a'
 DAC_B = 'b'
 DAC_2 = '2'
+
+# Setup commands
+START = 's'
+BIPOLAR = 'b'
+UNIPOLAR = 'u'
+GAIN_2 = '1'
+GAIN_4 = '2'
+GAIN_432 = '3'
 
 # Execution
 DONE = '!'
@@ -48,8 +59,7 @@ serial_port = serial.Serial(port=com_port, baudrate=9600)
 # Returns a formatted string command that can be sent
 def make_voltage_command(address, desired_voltage, reference_voltage, gain, bipolar):
 
-    instructions = WRITE
-    instructions = str(instructions + address)
+    instructions = str(DAC_INDICATOR + WRITE + address)
 
     data = str(calculate_bits(desired_voltage, reference_voltage, gain, bipolar))
 

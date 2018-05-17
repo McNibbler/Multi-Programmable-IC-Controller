@@ -129,6 +129,9 @@ const double GAIN = 2;
 // DAC DRIVER COMMANDS //
 /////////////////////////
 
+// Indicates that I'm actually talking about the AD DAC
+const uint8_t DAC_INDICATOR = 'D';
+
 // Constant bytes that represent the characters being sent as commands
 const uint8_t READ = 'r';
 const uint8_t WRITE = 'w';
@@ -140,6 +143,10 @@ const uint8_t DAC_2 = '2';
 const uint8_t START = 's';
 const uint8_t BIPOLAR = 'b';
 const uint8_t UNIPOLAR = 'u';
+
+const uint8_t GAIN_2 = '1';
+const uint8_t GAIN_4 = '2';
+const uint8_t GAIN_432 = '3';
 
 const uint8_t DONE = '!';
 
@@ -190,6 +197,21 @@ void loop() {
 //////////////////////
 
 void executeCommand(QueueArray <uint8_t> &command){
+
+  // Expandable so that I could potentially run different execution commands for other devices?
+  // PMIC monitoring system may be added.
+  if (command.front() == DAC_INDICATOR){
+    command.pop();
+    dacCommand(command);
+  }
+  else{
+    purge(command);
+    return;
+  }
+}
+
+
+void dacCommand(QueueArray <uint8_t> &command){
   
   uint8_t header;  // Initializes the data to send
   uint8_t rw;
@@ -198,7 +220,8 @@ void executeCommand(QueueArray <uint8_t> &command){
   if (command.front() == START){
     command.pop();
     uint8_t polarity = command.pop();
-    runSetup(polarity);
+    uint8_t gain = command.pop();
+    runSetup(polarity, gain);
     purge(command);
     return;
   }
@@ -272,11 +295,10 @@ uint8_t headerConstructor(uint8_t readWrite, uint8_t dacRegister, uint8_t channe
   return header;
 }
 
-void runSetup(uint8_t polarity){
+void runSetup(uint8_t polarity, uint8_t gain_mode){
 
   // makes sure that the data is valid
   if (polarity != BIPOLAR && polarity != UNIPOLAR){
-    Serial.println("Not bi or uni");
     return;
   }
 
@@ -285,14 +307,45 @@ void runSetup(uint8_t polarity){
   uint8_t rangeHeaderB = headerConstructor(WRITE_BIN, RANGE_REGISTER_BIN, DAC_B_BIN);        // Writing to "BOTH" apparently isn't enough smh.
   uint8_t rangeHeaderBoth = headerConstructor(WRITE_BIN, RANGE_REGISTER_BIN, DAC_2_BIN);
   if (polarity == BIPOLAR){
-    sendData(rangeHeaderA, BI_5_BIN, DEFAULT_SETTINGS);
-    sendData(rangeHeaderB, BI_5_BIN, DEFAULT_SETTINGS);
-    sendData(rangeHeaderBoth, BI_5_BIN, DEFAULT_SETTINGS);
+    if(gain_mode == GAIN_2){
+      sendData(rangeHeaderA, BI_5_BIN, DEFAULT_SETTINGS);
+      sendData(rangeHeaderB, BI_5_BIN, DEFAULT_SETTINGS);
+      sendData(rangeHeaderBoth, BI_5_BIN, DEFAULT_SETTINGS);
+    }
+    else if (gain_mode == GAIN_4){
+      sendData(rangeHeaderA, BI_10_BIN, DEFAULT_SETTINGS);
+      sendData(rangeHeaderB, BI_10_BIN, DEFAULT_SETTINGS);
+      sendData(rangeHeaderBoth, BI_10_BIN, DEFAULT_SETTINGS);
+    }
+    else if (gain_mode == GAIN_432){
+      sendData(rangeHeaderA, BI_108_BIN, DEFAULT_SETTINGS);
+      sendData(rangeHeaderB, BI_108_BIN, DEFAULT_SETTINGS);
+      sendData(rangeHeaderBoth, BI_108_BIN, DEFAULT_SETTINGS);
+    }
+    else{
+      return;
+    }
+    
   }
   else{
-    sendData(rangeHeaderA, UNI_5_BIN, DEFAULT_SETTINGS);
-    sendData(rangeHeaderB, UNI_5_BIN, DEFAULT_SETTINGS);
-    sendData(rangeHeaderBoth, UNI_5_BIN, DEFAULT_SETTINGS);
+    if (gain_mode == GAIN_2){
+      sendData(rangeHeaderA, UNI_5_BIN, DEFAULT_SETTINGS);
+      sendData(rangeHeaderB, UNI_5_BIN, DEFAULT_SETTINGS);
+      sendData(rangeHeaderBoth, UNI_5_BIN, DEFAULT_SETTINGS);
+    }
+    else if (gain_mode == GAIN_4){
+      sendData(rangeHeaderA, UNI_10_BIN, DEFAULT_SETTINGS);
+      sendData(rangeHeaderB, UNI_10_BIN, DEFAULT_SETTINGS);
+      sendData(rangeHeaderBoth, UNI_10_BIN, DEFAULT_SETTINGS);
+    }
+    else if (gain_mode == GAIN_432){
+      sendData(rangeHeaderA, UNI_108_BIN, DEFAULT_SETTINGS);
+      sendData(rangeHeaderB, UNI_108_BIN, DEFAULT_SETTINGS);
+      sendData(rangeHeaderBoth, UNI_108_BIN, DEFAULT_SETTINGS);
+    }
+    else{
+      return;
+    }
   }
 
 
