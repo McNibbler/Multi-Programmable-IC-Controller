@@ -1,6 +1,6 @@
 #####################################
 # DAC Driver GUI                    #
-# Version: Beta 0.2                 #
+# Version: Beta 0.2.1               #
 # Thomas Kaunzinger                 #
 # May 18, 2018                      #
 #                                   #
@@ -131,6 +131,9 @@ class Application(QWidget):
 
         self.is_bipolar = True
         self.is_tied = False
+
+        controller.send_initialization(self.is_bipolar, self.gain)
+        controller.send_voltage(controller.DAC_2, 0, self.reference_voltage, self.gain, self.is_bipolar)
 
         self.main_window()
 
@@ -326,6 +329,7 @@ class Application(QWidget):
     # Sends the setup command to the DAC
     def setup(self):
         controller.send_initialization(self.is_bipolar, self.gain)
+        controller.send_voltage(controller.DAC_2, 0, self.reference_voltage, self.gain, self.is_bipolar)
         self.status_text.setText('Welcome!')
 
     # Sends update commands to the DAC upon releasing the slider
