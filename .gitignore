@@ -1,5 +1,6 @@
 # Proprietary data that I shouldn't share publically
 /DAC_Driver_GUI/__pycache__/*
+/Serial Import/*
 
 # Temp Files
 *~

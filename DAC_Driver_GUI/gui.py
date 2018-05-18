@@ -1,8 +1,8 @@
 #####################################
 # DAC Driver GUI                    #
-# Version: Alpha 0.1                #
+# Version: Beta 0.2                 #
 # Thomas Kaunzinger                 #
-# May 11, 2018                      #
+# May 18, 2018                      #
 #                                   #
 # A GUI for interfacing with the    #
 # Arduino DAC controller.           #
@@ -56,16 +56,15 @@ class Application(QWidget):
         self.connect_sliders_checkbox.stateChanged.connect(self.tie_outputs)
 
         # Sets the reference voltage
-
         self.reference_voltage = 2.5
-        self.gain = 2.0
-
         self.reference_label = QLabel()
         self.reference_label.setText('Ref (V):')
         self.reference_textbox = QLineEdit()
         self.reference_textbox.setText(str(self.reference_voltage))
         self.reference_textbox.returnPressed.connect(self.update_ranges)
 
+        # Selectable gain modes
+        self.gain = 2.0
         self.gain_label = QLabel()
         self.gain_label.setText('Gain:')
         self.gain_modes = [str(self.gain), str(4.0), str(4.32)]
@@ -187,6 +186,8 @@ class Application(QWidget):
             self.voltage_slider_b.setEnabled(False)
             self.voltage_label_b.setText('DAC B (Tied to DAC A)')
 
+        self.status_text.setText('Welcome!')
+
     # Select between bipolar mode and unipolar
     def bipolar_toggle(self):
 
@@ -204,9 +205,13 @@ class Application(QWidget):
         self.voltage_slider_a.setSliderPosition(0)
         self.voltage_slider_b.setSliderPosition(0)
 
+        # Resets the outputs and initializes the DACs for the new settings
         controller.send_initialization(self.is_bipolar, self.gain)
+        controller.send_voltage(controller.DAC_2, 0.0, self.reference_voltage, self.gain, self.is_bipolar)
 
-    # Handler for when the slider is changed
+        self.status_text.setText('Welcome!')
+
+    # Handler for when the slider is changed (Doesn't update DAC until release because that would suck)
     def change_voltage(self):
 
         new_voltage_a = self.voltage_slider_a.value() / self.iterator
@@ -215,29 +220,53 @@ class Application(QWidget):
         self.voltage_textbox_a.setText(str(new_voltage_a))
         self.voltage_textbox_b.setText(str(new_voltage_b))
 
+        self.status_text.setText('Welcome!')
+
     # Handler for when the text is changed and the sliders need to be updated
     def update_sliders(self):
 
+        # Floats for the new voltages
         new_voltage_a = float(self.voltage_textbox_a.text())
         new_voltage_b = float(self.voltage_textbox_b.text())
 
+        # Checks if the input is inside the appropriate range and gives a warning if it isn't and denies request
         if self.is_bipolar:
             if (new_voltage_a > self.gain*self.reference_voltage
                     or new_voltage_b > self.gain*self.reference_voltage
                     or new_voltage_a < -1*self.gain*self.reference_voltage
                     or new_voltage_b < -1*self.gain*self.reference_voltage):
+
+                box = QMessageBox()
+                box.setIcon(QMessageBox.Warning)
+                box.setText('Bad Input:')
+                box.setInformativeText('Chosen voltage is out of range.')
+                box.setStandardButtons(QMessageBox.Ok)
+                box.exec_()
                 self.status_text.setText('Bad Input')
+                self.voltage_textbox_a.setText(str(self.voltage_slider_a.value() / self.iterator))
+                self.voltage_textbox_b.setText(str(self.voltage_slider_b.value() / self.iterator))
                 return
         else:
             if (new_voltage_a > self.gain*self.reference_voltage
                     or new_voltage_b > self.gain*self.reference_voltage
                     or new_voltage_a < 0 or new_voltage_b < 0):
+
+                box = QMessageBox()
+                box.setIcon(QMessageBox.Warning)
+                box.setText('Bad Input:')
+                box.setInformativeText('Chosen voltage is out of range.')
+                box.setStandardButtons(QMessageBox.Ok)
+                box.exec_()
                 self.status_text.setText('Bad Input')
+                self.voltage_textbox_a.setText(str(self.voltage_slider_a.value() / self.iterator))
+                self.voltage_textbox_b.setText(str(self.voltage_slider_b.value() / self.iterator))
                 return
 
+        # Sets the voltage sliders to match the new input
         self.voltage_slider_a.setValue(int(new_voltage_a * self.iterator))
         self.voltage_slider_b.setValue(int(new_voltage_b * self.iterator))
 
+        # Sends the voltages to the DAC
         if self.is_tied:
             controller.send_voltage(controller.DAC_2,
                                     self.voltage_slider_a.value() / self.iterator,
@@ -250,14 +279,28 @@ class Application(QWidget):
                                     self.voltage_slider_b.value() / self.iterator,
                                     self.reference_voltage, self.gain, self.is_bipolar)
 
+        self.status_text.setText('Welcome!')
+
+    # Updates the program for if the chosen reference voltage is changed or if the other gain modes are selected
     def update_ranges(self):
+
+        # Checks if the reference voltage is valid in the spec sheet
         if float(self.reference_textbox.text()) > 3 or float(self.reference_textbox.text()) < 2:
-            self.status_text.setText('Invalid Ref')
+            box = QMessageBox()
+            box.setIcon(QMessageBox.Warning)
+            box.setText('Bad Input:')
+            box.setInformativeText('The AD5722/AD5732/AD5752 DAC supports a reference voltage of +2 to +3V')
+            box.setStandardButtons(QMessageBox.Ok)
+            box.exec_()
+            self.status_text.setText('Bad Input')
+            self.reference_textbox.setText(str(self.reference_voltage))
             return
 
+        # Sets the selections to be appropriate
         self.reference_voltage = float(self.reference_textbox.text())
         self.gain = float(self.gain_select.currentText())
 
+        # Resets everything
         self.voltage_textbox_a.setText(str(0.0))
         self.voltage_textbox_b.setText(str(0.0))
         self.voltage_slider_a.setValue(0)
@@ -274,11 +317,16 @@ class Application(QWidget):
             self.voltage_slider_a.setRange(min(self.unipolar_range), max(self.unipolar_range))
             self.voltage_slider_b.setRange(min(self.unipolar_range), max(self.unipolar_range))
 
+        self.status_text.setText('Welcome!')
+
+        # Resets the DAC
         controller.send_initialization(self.is_bipolar, self.gain)
+        controller.send_voltage(controller.DAC_2, 0, self.reference_voltage, self.gain, self.is_bipolar)
 
     # Sends the setup command to the DAC
     def setup(self):
         controller.send_initialization(self.is_bipolar, self.gain)
+        self.status_text.setText('Welcome!')
 
     # Sends update commands to the DAC upon releasing the slider
     def send_slider(self):
@@ -293,9 +341,12 @@ class Application(QWidget):
             controller.send_voltage(controller.DAC_B,
                                     self.voltage_slider_b.value() / self.iterator,
                                     self.reference_voltage, self.gain, self.is_bipolar)
+        self.status_text.setText('Welcome!')
 
+    # Changes the COM port so you can find the one your Arduino is on
     def change_com(self):
         controller.set_com(self.com_select.currentText())
+        self.status_text.setText('Welcome!')
 
 
 ###################################################
@@ -310,4 +361,10 @@ if __name__ == '__main__':
 
     nice = Application()
 
-    sys.exit(app.exec_())
+    app.exec_()
+
+    # Resets the DAC outputs to 0 upon closing
+    controller.send_voltage(controller.DAC_2, 0, nice.reference_voltage, nice.gain, nice.is_bipolar)
+
+    sys.exit()
+
