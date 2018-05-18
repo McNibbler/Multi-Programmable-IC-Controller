@@ -31,5 +31,6 @@ PyQt5 can be installed with pip using the command 'pip install pyqt5'
 |14			|DV<sub>CC</sub>: Digital Power 		|+5 (or +3.3?)	|
 |17			|Reference Voltage (+2 to +3V)			|X				|
 |5			|Offset / 2's Complement				|HIGH			|
-|The Rest	|NC 									|NC 			|
+|Other pins	|NC - Do Not Connect					|NC 			|
+
 (Digital and Analog Power are both tied to the same GND in this diagram. See spec sheet for specifics.)
