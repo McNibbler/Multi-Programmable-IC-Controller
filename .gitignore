@@ -1,9 +1,14 @@
-# Proprietary data that I shouldn't share publically
+# Unnecessary
 /DAC_Driver_GUI/__pycache__/*
 /DAC_Driver_GUI/build/*
 /DAC_Driver_GUI/dist/*
 /DAC_Driver_GUI/tcl_tk_location.txt
 /Serial Import/*
+
+# Linduino libraries
+/PMIC_Control/LT_*
+/PMIC_Control/Linduino.h
+/PMIC_Control/UserInterface
 
 # Temp Files
 *~
