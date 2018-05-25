@@ -1,8 +1,8 @@
 #########################################
 # Pyduino                               #
-# Version: Beta 0.2                     #
+# Version: Beta 0.3                     #
 # Thomas Kaunzinger                     #
-# May 18, 2018                          #
+# May 25, 2018                          #
 #                                       #
 # A small library for the purpose of    #
 # sending commands to the Arduino DAC   #

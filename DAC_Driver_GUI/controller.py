@@ -1,13 +1,27 @@
 #########################################
 # DAC Driver Controller                 #
-# Version: Beta 0.2                     #
+# Version: Beta 0.3                     #
 # Thomas Kaunzinger                     #
-# May 18, 2018                          #
+# May 25, 2018                          #
 #                                       #
 # A library for interfacing from the    #
 # GUI to the communication library with #
 # appropriate bridigng calculations.    #
 #########################################
+
+# DOCUMENTATION
+#
+# send_voltage()
+#   (address: chr, desired_voltage: float, reference_voltage: float, gain: float, bipolar: bool) -> void
+#   Send a desired voltage to write to a chosen output of the DAC
+#
+# send_initialization()
+#   (is_bipolar: bool, gain: str) -> void
+#   Sends a command to initialize the DAC given the desired settings
+#
+# set_com()
+#   (port: str) -> void
+#   Changes the default COM port
 
 ###################################################
 
