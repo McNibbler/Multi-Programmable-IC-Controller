@@ -33,22 +33,7 @@ def send_voltage(address: chr, desired_voltage: float, reference_voltage: float,
 
 # Sends a setup command
 def send_initialization(is_bipolar: bool, gain: str):
-
-    # Finite state machine for polarity and gain
-    if is_bipolar:
-        polarity = BIPOLAR
-    else:
-        polarity = UNIPOLAR
-
-    if str(gain) == '2.0':
-        gain = GAIN_2
-    elif str(gain) == '4.0':
-        gain = GAIN_4
-    elif str(gain) == '4.32':
-        gain = GAIN_432
-
-    command = str(DAC_INDICATOR + START + polarity + gain + DONE)
-    send_command(command)
+    pyduino.send_initialization(is_bipolar, gain)
 
 
 # Use to set the COM Port being used

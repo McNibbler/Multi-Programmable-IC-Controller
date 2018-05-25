@@ -9,6 +9,65 @@
 # controller.                           #
 #########################################
 
+# HOW THIS LIBRARY WORKS
+#
+# The Pyduino library's purpose is to establish a simple communication command sequence that can be
+# sent easily over a serial connection and received by an Arduino or similar device to execute commands based
+# on the implementation of the interpretation on the Arduino side.
+#
+# Simply put, a command from this library starts with an initial ASCII character representing the device you wish to
+# communicate to. In this implementation, I have "D" at the front to signify that I'm talking to the DAC connected
+# to the arduino. Later on I plan to write some more to control a PMIC and DDS with this same system, so I may
+# use something like "P" to say I want to write to a PMIC. This is expandable to write command schemes for more
+# devices if you implement them on the arduino side.
+#
+# Furthermore, all commands end in the reserved character "!" which signifies that the command is complete and
+# ready to be sent to your arduino functions to be read and executed.
+#
+#
+# IMPLEMENTED DEVICES
+# "D" - AD5722/AD5732/AD5752 DAC
+# After initial character, one can either send a setup command or a read/write command
+#
+# "s": Start command
+#   Afterwards, send the configuration for bipolar or unipolar: "b" or "u"
+#   Followed by gain mode: x2 = "1", x4 = "2", x4.32 = "3"
+#   Finish with a "!"
+#   e.g. - "Dsb1!"
+#
+# "w": Write command
+#   Afterwards send a DAC register you wish to write to: A = "a", B = "b", Both = "2"
+#   Followed by the INTEGER value of the data you wish to write to that DAC
+#       Convert the integer to a characters representing the number.
+#       This integer can be created using calculate_bits()
+#           calculate_bits(desired_voltage: float, reference_voltage: float, gain: float, bipolar: bool) -> int
+#   Finish with a "!"
+#   e.g. - "Dwb12832!"
+#
+# "r": Read command
+#   Afterwards send a DAC register you wish to read from: A = "a", B = "b", Both = "2"
+#   Finish with a "!"
+#   e.g. - "Dra!"
+#   NOTE: Not implemented yet!!!! Requires processing and reading back functions that are not implemented yet!
+#
+#
+# FUNCTIONS
+# make_voltage_command()
+#   (address: chr, desired_voltage: float, reference_voltage: float, gain: float, bipolar: bool) -> str
+#   Returns a string that can be sent as a write command for the DAC to set an addressable output to a desired voltage
+#
+# calculate_bits()
+#   (desired_voltage: float, reference_voltage: float, gain: float, bipolar: bool) -> int
+#   Returns an integer that can be used in make_voltage_command to send for the data for the DAC
+#
+# send_initialization()
+#   (is_bipolar: bool, gain: str) -> void
+#   Creates and sends a setup command to the DAC
+#
+# send_command()
+#   (command: str) -> void
+#   Sends the command through the serial COM port
+
 ###################################################
 
 ###########
@@ -100,6 +159,26 @@ def calculate_bits(desired_voltage: float, reference_voltage: float, gain: float
     data = int(fraction * (1 << BITS)) * (1 << (MAX_BITS - BITS))
 
     return data
+
+
+# Sends a setup command
+def send_initialization(is_bipolar: bool, gain: str):
+
+    # Finite state machine for polarity and gain
+    if is_bipolar:
+        polarity = BIPOLAR
+    else:
+        polarity = UNIPOLAR
+
+    if str(gain) == '2.0':
+        gain = GAIN_2
+    elif str(gain) == '4.0':
+        gain = GAIN_4
+    elif str(gain) == '4.32':
+        gain = GAIN_432
+
+    command = str(DAC_INDICATOR + START + polarity + gain + DONE)
+    send_command(command)
 
 
 ###################################################
