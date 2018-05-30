@@ -1,9 +1,17 @@
 # Unnecessary
 /DAC_Driver_GUI/__pycache__/*
+/DAC_Driver_GUI/DAC_Driver/.vscode/*
 /DAC_Driver_GUI/build/*
 /DAC_Driver_GUI/dist/*
 /DAC_Driver_GUI/tcl_tk_location.txt
 /Serial Import/*
+*.vscode
+*.json
+*.pyc
+*.pyo
+
+__pycache__/
+.vscode/
 
 # Linduino libraries
 /PMIC_Control/LT_*

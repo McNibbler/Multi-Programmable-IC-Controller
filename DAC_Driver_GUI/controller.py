@@ -29,10 +29,9 @@
 # IMPORTS #
 ###########
 
+import pyduino
 import serial
 from pyduino import *
-import pyduino
-
 
 ###################################################
 
