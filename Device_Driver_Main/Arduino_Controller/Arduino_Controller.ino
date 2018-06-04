@@ -97,7 +97,6 @@ const uint8_t PMIC_INDICATOR = 'P';
 const uint8_t DDS_INDICATOR = 'd';
 
 
-
 //////////////
 // EXECUTOR //
 //////////////
@@ -110,6 +109,12 @@ const uint8_t DONE = '!';
 
   // when u yeet so hard u get yote
 
+  // Four modes of operation
+  const uint8_t DDS_SINGLE_TONE = 's';
+  const uint8_t DDS_RAM = 'R';
+  const uint8_t DDS_RAMP = 'r';
+  const uint8_t DDS_PARALLEL = 'p';
+
 
 ///////////////////
 // PMIC COMMANDS //
@@ -118,6 +123,7 @@ const uint8_t DONE = '!';
   // Whatever
   const uint8_t PMIC_OUTPUT = 'o';
   const uint8_t PMIC_SENSE = 's';
+  const uint8_t PMIC_ENABLE = 'e';
 
 
 //////////////////

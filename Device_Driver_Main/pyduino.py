@@ -79,15 +79,48 @@ import serial.tools.list_ports
 
 ###################################################
 
-#############
-# CONSTANTS #
-#############
+##############################
+# DEVICE ADDRESS IDENTIFIERS #
+##############################
 
-# COMMANDS #
-# Device indicator
+# AD5732 DAC
 DAC_INDICATOR = 'D'
 
-# DAC CONTROLS #
+# LT2977 PMIC
+PMIC_INDICATOR = 'P'
+
+# AD9910 DDS
+DDS_INDICATOR = 'd'
+
+############
+# EXECUTOR #
+############
+
+DONE = '!'
+
+################
+# DDS COMMANDS #
+################
+
+# Four modes of operation
+DDS_SINGLE_TONE = 's'
+DDS_RAM = 'R'
+DDS_RAMP = 'r'
+DDS_PARALLEL = 'p'
+
+#################
+# PMIC COMMANDS #
+#################
+
+# Different inputs/outputs from the PMIC
+PMIC_OUTPUT = 'o'
+PMIC_SENSE = 's'
+PMIC_ENABLE = 'e'
+
+################
+# DAC COMMANDS #
+################
+
 # r/w
 DAC_READ = 'r'
 DAC_WRITE = 'w'
@@ -102,8 +135,6 @@ DAC_UNIPOLAR = 'u'
 DAC_GAIN_2 = '1'
 DAC_GAIN_4 = '2'
 DAC_GAIN_432 = '3'
-# Execution
-DONE = '!'
 
 # OTHER CONSTANTS #
 # Bit precision of the DAC
