@@ -1,20 +1,32 @@
-# DAC-Controller
-Simple Python/QT/Arduino program designed to control an AD5722/AD5732/AD5752 DAC through SPI communication, specifically the AD5732. This IC is a 14 bit individually addressable dual output DAC. The spec sheet can be seen here: http://www.analog.com/media/en/technical-documentation/data-sheets/AD5722_5732_5752.pdf
+# Multi-Device Controller
+This repository showcases a self-designed framework for controlling multiple programmable integrated circuits through a single Arduino and custom GUI.
+An example GUI was created using Python with QT and a custom-made expandable library (PyDuino) which communicates to the Arduino sending a simple,
+easily expandable command system. From the Arduino side, the serial commands are recieved through USB, stored in a queue and executed into one main
+execution function that can be defined to divert to different backend functions for each individual device to program, to which the Arduino can then
+be programmed to send data to the different individual devices through SPI or I2C.
+
+For this project, I will/have implement(ed) the GUI/Arduino to controll 3 separate devices. The first of which is an AD5722/AD5732/AD5752 DAC through SPI,
+which was the initial goal of this project. However, to acompany it is futher, it is being expanded to also control an LTC2977 PMIC (controlled by PMBus)
+as well as an AD9910 (SPI).
 
 # Execution
-The new version of the code is located in /DAC_Driver_GUI/*
-To be uploaded to the Arduino: /DAC_Driver_GUI/DAC_Driver/Dac_Driver.ino
+The new version of the code is located in /Device_Driver_Main/*
+To be uploaded to the Arduino: /Device_Driver_Main/Arduino_Controller/Arduino_Controller.ino
 
-To run the program, run /DAC_Driver_GUI/gui.py with all dependencies installed (PyQt5 + all libraries in shared folder)
+To run the program, run /Device_Driver_Main/gui.py with all dependencies installed (PyQt5 + all libraries in shared folder)
 
 PyQt5 can be installed with pip using the command 'pip install pyqt5'
 
-# DAC Power-up sequence
+# DAC-Controller
+The initial goal of this program was designed to control an AD5722/AD5732/AD5752 DAC through SPI communication, specifically the AD5732.
+This IC is a 14 bit individually addressable dual output DAC. The spec sheet can be seen here: http://www.analog.com/media/en/technical-documentation/data-sheets/AD5722_5732_5752.pdf
+
+## DAC Power-up sequence
 1. GND
 2. Digital Power (+2.7V to +5.5V)
 3. Analog Power (+/- 4.5 to +/- 16.5V) (Positive and Negative squence order do not matter)
 
-# Pinouts
+## DAC Pinouts
 |DAC Pin 	|Pin Description 						|Arduino Pin 	|
 |-----------|---------------------------------------|---------------|
 |1, EP		|AV<sub>SS</sub>: Negative Analog Power |X				|

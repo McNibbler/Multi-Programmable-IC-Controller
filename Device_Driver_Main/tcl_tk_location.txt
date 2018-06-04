@@ -1,0 +1,2 @@
+C:\\Users\\tkaunzin\\AppData\\Local\\Programs\\Python\\Python36-32\\tcl\\tcl8.6
+C:\\Users\\tkaunzin\\AppData\\Local\\Programs\\Python\\Python36-32\\tcl\\tk8.6
