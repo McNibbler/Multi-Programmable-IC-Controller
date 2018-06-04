@@ -38,7 +38,7 @@
  * 
  * First writes:
  *  The first communication to the DAC should be to set the output range on all channels by writing to the output range select
- *  register (default is 5V unipolar range).
+ *  register (default is 5V DAC_UNIPOLAR range).
  *  
  *  Furthermore, to program an output, it must first be powered up using the power control register, otherwise all code trying
  *  to access these is ignored.
@@ -92,7 +92,7 @@ SPISettings DEFAULT_SETTINGS(CLOCK_SPEED, MSBFIRST, SPI_MODE2);
 // DAC CONTROL CONSTANTS //
 ///////////////////////////
 
-// R/W (write is active low)
+// R/W (DAC_WRITE is active low)
 const uint8_t READ_BIN = 1;
 const uint8_t WRITE_BIN = 0;
 
@@ -125,30 +125,43 @@ const uint8_t BI_108_BIN = 5;   // 101
 const double GAIN = 2;
 
 
-/////////////////////////
-// DAC DRIVER COMMANDS //
-/////////////////////////
+////////////////////////////////
+// DEVICE ADDRESS IDENTIFIERS //
+////////////////////////////////
 
-// Indicates that I'm actually talking about the AD DAC
+// AD5732 DAC
 const uint8_t DAC_INDICATOR = 'D';
 
+// LT2977 PMIC
+const uint8_t PMIC_INDICATOR = 'P';
+
+// AD9910 DDS
+const uint8_t DDS_INDICATOR = 'd';
+
+//////////////
+// EXECUTOR //
+//////////////
+const uint8_t DONE = '!';
+
+//////////////////
+// DAC COMMANDS //
+//////////////////
+
 // Constant bytes that represent the characters being sent as commands
-const uint8_t READ = 'r';
-const uint8_t WRITE = 'w';
+const uint8_t DAC_READ = 'r';
+const uint8_t DAC_WRITE = 'w';
 
 const uint8_t DAC_A = 'a';
 const uint8_t DAC_B = 'b';
 const uint8_t DAC_2 = '2';
 
-const uint8_t START = 's';
-const uint8_t BIPOLAR = 'b';
-const uint8_t UNIPOLAR = 'u';
+const uint8_t DAC_START = 's';
+const uint8_t DAC_BIPOLAR = 'b';
+const uint8_t DAC_UNIPOLAR = 'u';
 
-const uint8_t GAIN_2 = '1';
-const uint8_t GAIN_4 = '2';
-const uint8_t GAIN_432 = '3';
-
-const uint8_t DONE = '!';
+const uint8_t DAC_GAIN_2 = '1';
+const uint8_t DAC_GAIN_4 = '2';
+const uint8_t DAC_GAIN_432 = '3';
 
 
 //////////////////////////////////////////////////////////////////////
@@ -202,7 +215,15 @@ void executeCommand(QueueArray <uint8_t> &command){
   // PMIC monitoring system may be added.
   if (command.front() == DAC_INDICATOR){
     command.pop();
-    dacCommand(command);
+    DACcommand(command);
+  }
+  else if (command.front() == PMIC_INDICATOR){
+    command.pop();
+    PMICcommand(command);
+  }
+  else if (command.front() == DDS_INDICATOR){
+    command.pop();
+    DDScommand(command);
   }
   else{
     purge(command);
@@ -210,23 +231,58 @@ void executeCommand(QueueArray <uint8_t> &command){
   }
 }
 
+// Empties a queue by popping everything in it. There's probably a faster way to do this.
+void purge(QueueArray <uint8_t> &queue){
+  while(!queue.isEmpty()) queue.pop();
+}
 
-void dacCommand(QueueArray <uint8_t> &command){
+///////////////////
+// DDS COMMANDS //
+///////////////////
+
+// To be implemented
+void DDScommand(QueueArray <uint8_t> &command){
+
+  purge(command);
+  return;
+
+}
+
+
+///////////////////
+// PMIC COMMANDS //
+///////////////////
+
+// To be implemented
+void PMICcommand(QueueArray <uint8_t> &command){
+
+  purge(command);
+  return;
+
+}
+
+
+//////////////////
+// DAC COMMANDS //
+//////////////////
+
+// Runs through and interperates the DAC command after the header
+void DACcommand(QueueArray <uint8_t> &command){
   
   uint8_t header;  // Initializes the data to send
   uint8_t rw;
   uint16_t data;
 
-  if (command.front() == START){
+  if (command.front() == DAC_START){
     command.pop();
     uint8_t polarity = command.pop();
     uint8_t gain = command.pop();
-    runSetup(polarity, gain);
+    DACrunSetup(polarity, gain);
     purge(command);
     return;
   }
-  else if (command.front() == READ)   {rw = READ_BIN;}
-  else if (command.front() == WRITE)  {rw = WRITE_BIN;}
+  else if (command.front() == DAC_READ)   {rw = READ_BIN;}
+  else if (command.front() == DAC_WRITE)  {rw = WRITE_BIN;}
   else{
     purge(command);
     return;
@@ -236,9 +292,9 @@ void dacCommand(QueueArray <uint8_t> &command){
   command.pop();
 
   // Appends the DAC address to the header. Purges and ignores with with invalid syntax.
-  if      (command.front() == DAC_A)  {header = headerConstructor(rw, DAC_REGISTER_BIN, DAC_A_BIN);}
-  else if (command.front() == DAC_B)  {header = headerConstructor(rw, DAC_REGISTER_BIN, DAC_B_BIN);}
-  else if (command.front() == DAC_2)  {header = headerConstructor(rw, DAC_REGISTER_BIN, DAC_2_BIN);}
+  if      (command.front() == DAC_A)  {header = DACheaderConstructor(rw, DAC_REGISTER_BIN, DAC_A_BIN);}
+  else if (command.front() == DAC_B)  {header = DACheaderConstructor(rw, DAC_REGISTER_BIN, DAC_B_BIN);}
+  else if (command.front() == DAC_2)  {header = DACheaderConstructor(rw, DAC_REGISTER_BIN, DAC_2_BIN);}
   else{
     purge(command);
     return;
@@ -254,24 +310,17 @@ void dacCommand(QueueArray <uint8_t> &command){
   }
   data = data_string.toInt();
 
-  sendData(header, data, DEFAULT_SETTINGS);   // Function to send the data to the DAC. Only reaches here if the whole command is valid.
-  loadDataDAC();
+  DACsendData(header, data, DEFAULT_SETTINGS);   // Function to send the data to the DAC. Only reaches here if the whole command is valid.
+  DACloadData();
   
 }
-
-
-// Empties a queue by popping everything in it. There's probably a faster way to do this.
-void purge(QueueArray <uint8_t> &queue){
-  while(!queue.isEmpty()) queue.pop();
-}
-
 
 ///////////////////////
 // SPI DATA HANDLING //
 ///////////////////////
 
 // sends 24-bit sequence to the DAC
-void sendData(uint8_t header, uint16_t data, SPISettings settings){
+void DACsendData(uint8_t header, uint16_t data, SPISettings settings){
   SPI.beginTransaction(settings);
   digitalWrite(SS, LOW);
   SPI.transfer(header);
@@ -284,7 +333,7 @@ void sendData(uint8_t header, uint16_t data, SPISettings settings){
 
 
 // returns an 8 bit header to send to the DAC before the data
-uint8_t headerConstructor(uint8_t readWrite, uint8_t dacRegister, uint8_t channel){
+uint8_t DACheaderConstructor(uint8_t readWrite, uint8_t dacRegister, uint8_t channel){
   uint8_t header;
   
   header = readWrite << 7;      // RW logic bit
@@ -295,32 +344,32 @@ uint8_t headerConstructor(uint8_t readWrite, uint8_t dacRegister, uint8_t channe
   return header;
 }
 
-void runSetup(uint8_t polarity, uint8_t gain_mode){
+void DACrunSetup(uint8_t polarity, uint8_t gain_mode){
 
   // makes sure that the data is valid
-  if (polarity != BIPOLAR && polarity != UNIPOLAR){
+  if (polarity != DAC_BIPOLAR && polarity != DAC_UNIPOLAR){
     return;
   }
 
-  // Sets up output range as bipolar or unipolar
-  uint8_t rangeHeaderA = headerConstructor(WRITE_BIN, RANGE_REGISTER_BIN, DAC_A_BIN);        // I have to write to all 3 of these channels individually.
-  uint8_t rangeHeaderB = headerConstructor(WRITE_BIN, RANGE_REGISTER_BIN, DAC_B_BIN);        // Writing to "BOTH" apparently isn't enough smh.
-  uint8_t rangeHeaderBoth = headerConstructor(WRITE_BIN, RANGE_REGISTER_BIN, DAC_2_BIN);
-  if (polarity == BIPOLAR){
-    if(gain_mode == GAIN_2){
-      sendData(rangeHeaderA, BI_5_BIN, DEFAULT_SETTINGS);
-      sendData(rangeHeaderB, BI_5_BIN, DEFAULT_SETTINGS);
-      sendData(rangeHeaderBoth, BI_5_BIN, DEFAULT_SETTINGS);
+  // Sets up output range as DAC_BIPOLAR or DAC_UNIPOLAR
+  uint8_t rangeHeaderA = DACheaderConstructor(WRITE_BIN, RANGE_REGISTER_BIN, DAC_A_BIN);        // I have to DAC_WRITE to all 3 of these channels individually.
+  uint8_t rangeHeaderB = DACheaderConstructor(WRITE_BIN, RANGE_REGISTER_BIN, DAC_B_BIN);        // Writing to "BOTH" apparently isn't enough smh.
+  uint8_t rangeHeaderBoth = DACheaderConstructor(WRITE_BIN, RANGE_REGISTER_BIN, DAC_2_BIN);
+  if (polarity == DAC_BIPOLAR){
+    if(gain_mode == DAC_GAIN_2){
+      DACsendData(rangeHeaderA, BI_5_BIN, DEFAULT_SETTINGS);
+      DACsendData(rangeHeaderB, BI_5_BIN, DEFAULT_SETTINGS);
+      DACsendData(rangeHeaderBoth, BI_5_BIN, DEFAULT_SETTINGS);
     }
-    else if (gain_mode == GAIN_4){
-      sendData(rangeHeaderA, BI_10_BIN, DEFAULT_SETTINGS);
-      sendData(rangeHeaderB, BI_10_BIN, DEFAULT_SETTINGS);
-      sendData(rangeHeaderBoth, BI_10_BIN, DEFAULT_SETTINGS);
+    else if (gain_mode == DAC_GAIN_4){
+      DACsendData(rangeHeaderA, BI_10_BIN, DEFAULT_SETTINGS);
+      DACsendData(rangeHeaderB, BI_10_BIN, DEFAULT_SETTINGS);
+      DACsendData(rangeHeaderBoth, BI_10_BIN, DEFAULT_SETTINGS);
     }
-    else if (gain_mode == GAIN_432){
-      sendData(rangeHeaderA, BI_108_BIN, DEFAULT_SETTINGS);
-      sendData(rangeHeaderB, BI_108_BIN, DEFAULT_SETTINGS);
-      sendData(rangeHeaderBoth, BI_108_BIN, DEFAULT_SETTINGS);
+    else if (gain_mode == DAC_GAIN_432){
+      DACsendData(rangeHeaderA, BI_108_BIN, DEFAULT_SETTINGS);
+      DACsendData(rangeHeaderB, BI_108_BIN, DEFAULT_SETTINGS);
+      DACsendData(rangeHeaderBoth, BI_108_BIN, DEFAULT_SETTINGS);
     }
     else{
       return;
@@ -328,20 +377,20 @@ void runSetup(uint8_t polarity, uint8_t gain_mode){
     
   }
   else{
-    if (gain_mode == GAIN_2){
-      sendData(rangeHeaderA, UNI_5_BIN, DEFAULT_SETTINGS);
-      sendData(rangeHeaderB, UNI_5_BIN, DEFAULT_SETTINGS);
-      sendData(rangeHeaderBoth, UNI_5_BIN, DEFAULT_SETTINGS);
+    if (gain_mode == DAC_GAIN_2){
+      DACsendData(rangeHeaderA, UNI_5_BIN, DEFAULT_SETTINGS);
+      DACsendData(rangeHeaderB, UNI_5_BIN, DEFAULT_SETTINGS);
+      DACsendData(rangeHeaderBoth, UNI_5_BIN, DEFAULT_SETTINGS);
     }
-    else if (gain_mode == GAIN_4){
-      sendData(rangeHeaderA, UNI_10_BIN, DEFAULT_SETTINGS);
-      sendData(rangeHeaderB, UNI_10_BIN, DEFAULT_SETTINGS);
-      sendData(rangeHeaderBoth, UNI_10_BIN, DEFAULT_SETTINGS);
+    else if (gain_mode == DAC_GAIN_4){
+      DACsendData(rangeHeaderA, UNI_10_BIN, DEFAULT_SETTINGS);
+      DACsendData(rangeHeaderB, UNI_10_BIN, DEFAULT_SETTINGS);
+      DACsendData(rangeHeaderBoth, UNI_10_BIN, DEFAULT_SETTINGS);
     }
-    else if (gain_mode == GAIN_432){
-      sendData(rangeHeaderA, UNI_108_BIN, DEFAULT_SETTINGS);
-      sendData(rangeHeaderB, UNI_108_BIN, DEFAULT_SETTINGS);
-      sendData(rangeHeaderBoth, UNI_108_BIN, DEFAULT_SETTINGS);
+    else if (gain_mode == DAC_GAIN_432){
+      DACsendData(rangeHeaderA, UNI_108_BIN, DEFAULT_SETTINGS);
+      DACsendData(rangeHeaderB, UNI_108_BIN, DEFAULT_SETTINGS);
+      DACsendData(rangeHeaderBoth, UNI_108_BIN, DEFAULT_SETTINGS);
     }
     else{
       return;
@@ -350,7 +399,7 @@ void runSetup(uint8_t polarity, uint8_t gain_mode){
 
 
   // Sets up DAC preferences
-  uint8_t controlToggleHeader = headerConstructor(WRITE_BIN, CONTROL_REGISTER_BIN, TOGGLES_BIN);
+  uint8_t controlToggleHeader = DACheaderConstructor(WRITE_BIN, CONTROL_REGISTER_BIN, TOGGLES_BIN);
   /* CONTROL TOGGLES OPERATION GUIDE
    * 
    * Thermal SD       0 = No thermal shutdown         1 = Enable thermal shutdown
@@ -363,19 +412,19 @@ void runSetup(uint8_t polarity, uint8_t gain_mode){
    * 1            | 0             | 0             | 0
    */
   uint16_t controlToggleData = 4;
-  sendData(controlToggleHeader, controlToggleData, DEFAULT_SETTINGS);
+  DACsendData(controlToggleHeader, controlToggleData, DEFAULT_SETTINGS);
 
 
   // Powers up the DAC channels
-  uint8_t powerHeader = headerConstructor(WRITE_BIN, POWER_REGISTER_BIN, uint16_t(0));
+  uint8_t powerHeader = DACheaderConstructor(WRITE_BIN, POWER_REGISTER_BIN, uint16_t(0));
   /* POWER OPERATION GUIDE
    * 
    * Data bits are as follows:
    * X     X     X     X     X     0     OCb   X     OCa   X     TSD   X     X     PUb   X     PUa
    * 
    * X = Don't care, I'm defaulting to 0 for this
-   * OCa and OCb are read-only bits that alert if overcurrent is detected in either respective DAC channels
-   * TSD is a read-only bit and is set in the event that the channels have shut down due to overheating
+   * OCa and OCb are DAC_READ-only bits that alert if overcurrent is detected in either respective DAC channels
+   * TSD is a DAC_READ-only bit and is set in the event that the channels have shut down due to overheating
    * 
    * PUa and PUb are bits to send to power-up their respective DAC channels
    * 
@@ -383,16 +432,16 @@ void runSetup(uint8_t polarity, uint8_t gain_mode){
    * 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 1
    */
   uint16_t powerData = 5;
-  sendData(powerHeader, powerData, DEFAULT_SETTINGS);
+  DACsendData(powerHeader, powerData, DEFAULT_SETTINGS);
   
 
   // Sends the function to update and load the DAC data
-  uint8_t loadHeader = headerConstructor(WRITE_BIN, CONTROL_REGISTER_BIN, LOAD_BIN);
-  sendData(loadHeader, uint16_t(0), DEFAULT_SETTINGS);
+  uint8_t loadHeader = DACheaderConstructor(WRITE_BIN, CONTROL_REGISTER_BIN, LOAD_BIN);
+  DACsendData(loadHeader, uint16_t(0), DEFAULT_SETTINGS);
 
 
   // Loads up what's in the buffer
-  loadDataDAC();
+  DACloadData();
 
 
   // Slight delay
@@ -402,9 +451,9 @@ void runSetup(uint8_t polarity, uint8_t gain_mode){
 
 
 // Sends the function to update and load the DAC data
-void loadDataDAC (){
-  uint8_t loadHeader = headerConstructor(WRITE_BIN, CONTROL_REGISTER_BIN, LOAD_BIN);
-  sendData(loadHeader, uint16_t(0), DEFAULT_SETTINGS);
+void DACloadData (){
+  uint8_t loadHeader = DACheaderConstructor(WRITE_BIN, CONTROL_REGISTER_BIN, LOAD_BIN);
+  DACsendData(loadHeader, uint16_t(0), DEFAULT_SETTINGS);
 }
 
 
