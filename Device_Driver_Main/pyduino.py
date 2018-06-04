@@ -89,26 +89,26 @@ DAC_INDICATOR = 'D'
 
 # DAC CONTROLS #
 # r/w
-READ = 'r'
-WRITE = 'w'
+DAC_READ = 'r'
+DAC_WRITE = 'w'
 # Addresses
 DAC_A = 'a'
 DAC_B = 'b'
 DAC_2 = '2'
 # Setup commands
-START = 's'
-BIPOLAR = 'b'
-UNIPOLAR = 'u'
-GAIN_2 = '1'
-GAIN_4 = '2'
-GAIN_432 = '3'
+DAC_START = 's'
+DAC_BIPOLAR = 'b'
+DAC_UNIPOLAR = 'u'
+DAC_GAIN_2 = '1'
+DAC_GAIN_4 = '2'
+DAC_GAIN_432 = '3'
 # Execution
 DONE = '!'
 
 # OTHER CONSTANTS #
 # Bit precision of the DAC
-BITS = 14
-MAX_BITS = 16
+DAC_BITS = 14
+DAC_MAX_BITS = 16
 
 
 ###################################################
@@ -138,7 +138,7 @@ serial_port = serial.Serial(port=com_port, baudrate=9600)
 def make_voltage_command(address: chr, desired_voltage: float,
                          reference_voltage: float, gain: float, bipolar: bool) -> str:
 
-    instructions = str(DAC_INDICATOR + WRITE + address)
+    instructions = str(DAC_INDICATOR + DAC_WRITE + address)
 
     data = str(calculate_bits(desired_voltage, reference_voltage, gain, bipolar))
 
@@ -156,7 +156,7 @@ def calculate_bits(desired_voltage: float, reference_voltage: float, gain: float
         fraction = (desired_voltage / reference_voltage) / gain
 
     # Bitwise operators in python are a goddamn sin i just want my fixed variable sizes why is that a problem smh
-    data = int(fraction * (1 << BITS)) * (1 << (MAX_BITS - BITS))
+    data = int(fraction * (1 << DAC_BITS)) * (1 << (DAC_MAX_BITS - DAC_BITS))
 
     return data
 
@@ -166,18 +166,18 @@ def send_initialization(is_bipolar: bool, gain: str):
 
     # Finite state machine for polarity and gain
     if is_bipolar:
-        polarity = BIPOLAR
+        polarity = DAC_BIPOLAR
     else:
-        polarity = UNIPOLAR
+        polarity = DAC_UNIPOLAR
 
     if str(gain) == '2.0':
-        gain = GAIN_2
+        gain = DAC_GAIN_2
     elif str(gain) == '4.0':
-        gain = GAIN_4
+        gain = DAC_GAIN_4
     elif str(gain) == '4.32':
-        gain = GAIN_432
+        gain = DAC_GAIN_432
 
-    command = str(DAC_INDICATOR + START + polarity + gain + DONE)
+    command = str(DAC_INDICATOR + DAC_START + polarity + gain + DONE)
     send_command(command)
 
 

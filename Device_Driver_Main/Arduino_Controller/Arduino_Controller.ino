@@ -66,7 +66,6 @@
 
 
 //////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////
 
 ///////////////
 // CONSTANTS //
@@ -79,50 +78,9 @@
 //const int_fast8_t CLK = 13;
 const int_fast8_t LDAC = 8;
 
-// DAC Information
-const int_fast8_t MAX_BITS = 16;          // Number of Bits after the initial header
-const int_fast8_t BITS = 14;              // Number of Bits of precision for the DAC being used
-const int_fast16_t CLOCK_SPEED = 10000;    // DAC is rated for 30MHz, Arduino clock is much lower? Signal started looking really bad @100kHz
-
 // SPI settings
+const int_fast16_t CLOCK_SPEED = 10000;    // DAC is rated for 30MHz, Arduino clock is much lower? Signal started looking really bad @100kHz
 SPISettings DEFAULT_SETTINGS(CLOCK_SPEED, MSBFIRST, SPI_MODE2);
-
-
-///////////////////////////
-// DAC CONTROL CONSTANTS //
-///////////////////////////
-
-// R/W (DAC_WRITE is active low)
-const uint8_t READ_BIN = 1;
-const uint8_t WRITE_BIN = 0;
-
-// Registers for controlling DAC
-const uint8_t DAC_REGISTER_BIN = 0;      // 000
-const uint8_t RANGE_REGISTER_BIN = 1;    // 001
-const uint8_t POWER_REGISTER_BIN = 2;    // 010
-const uint8_t CONTROL_REGISTER_BIN = 3;  // 011
-
-// DAC channel addresses
-const uint8_t DAC_A_BIN = 0;     // 000
-const uint8_t DAC_B_BIN = 2;     // 010
-const uint8_t DAC_2_BIN = 4;     // 100
-
-// Control channel addresses
-const uint8_t NOP_BIN = 0;       // 000
-const uint8_t TOGGLES_BIN = 1;   // 001
-const uint8_t CLR_BIN = 4;       // 100
-const uint8_t LOAD_BIN = 5;      // 101
-
-// Output range select register
-const uint8_t UNI_5_BIN = 0;    // 000
-const uint8_t UNI_10_BIN= 1;   // 001
-const uint8_t UNI_108_BIN = 2;  // 010
-const uint8_t BI_5_BIN = 3;     // 011
-const uint8_t BI_10_BIN = 4;    // 100
-const uint8_t BI_108_BIN = 5;   // 101
-
-// DAC's gain
-const double GAIN = 2;
 
 
 ////////////////////////////////
@@ -138,30 +96,86 @@ const uint8_t PMIC_INDICATOR = 'P';
 // AD9910 DDS
 const uint8_t DDS_INDICATOR = 'd';
 
+
 //////////////
 // EXECUTOR //
 //////////////
 const uint8_t DONE = '!';
 
+
+//////////////////
+// DDS COMMANDS //
+//////////////////
+
+  // when u yeet so hard u get yote
+
+
+///////////////////
+// PMIC COMMANDS //
+///////////////////
+
+  // Whatever
+  const uint8_t PMIC_OUTPUT = 'o';
+  const uint8_t PMIC_SENSE = 's';
+
+
 //////////////////
 // DAC COMMANDS //
 //////////////////
 
-// Constant bytes that represent the characters being sent as commands
-const uint8_t DAC_READ = 'r';
-const uint8_t DAC_WRITE = 'w';
+  // DAC Information
+  const int_fast8_t MAX_BITS = 16;          // Number of Bits after the initial header
+  const int_fast8_t BITS = 14;              // Number of Bits of precision for the DAC being used
 
-const uint8_t DAC_A = 'a';
-const uint8_t DAC_B = 'b';
-const uint8_t DAC_2 = '2';
+  // Constant bytes that represent the characters being sent as commands
+  const uint8_t DAC_READ = 'r';
+  const uint8_t DAC_WRITE = 'w';
+  
+  const uint8_t DAC_A = 'a';
+  const uint8_t DAC_B = 'b';
+  const uint8_t DAC_2 = '2';
+  
+  const uint8_t DAC_START = 's';
+  const uint8_t DAC_BIPOLAR = 'b';
+  const uint8_t DAC_UNIPOLAR = 'u';
+  
+  const uint8_t DAC_GAIN_2 = '1';
+  const uint8_t DAC_GAIN_4 = '2';
+  const uint8_t DAC_GAIN_432 = '3';
+  
 
-const uint8_t DAC_START = 's';
-const uint8_t DAC_BIPOLAR = 'b';
-const uint8_t DAC_UNIPOLAR = 'u';
-
-const uint8_t DAC_GAIN_2 = '1';
-const uint8_t DAC_GAIN_4 = '2';
-const uint8_t DAC_GAIN_432 = '3';
+  ///////////////////////////
+  // DAC CONTROL CONSTANTS //
+  ///////////////////////////
+  
+  // R/W (DAC_WRITE is active low)
+  const uint8_t DAC_READ_BIN = 1;
+  const uint8_t DAC_WRITE_BIN = 0;
+  
+  // Registers for controlling DAC
+  const uint8_t DAC_REGISTER_BIN = 0;      // 000
+  const uint8_t RANGE_REGISTER_BIN = 1;    // 001
+  const uint8_t POWER_REGISTER_BIN = 2;    // 010
+  const uint8_t CONTROL_REGISTER_BIN = 3;  // 011
+  
+  // DAC channel addresses
+  const uint8_t DAC_A_BIN = 0;     // 000
+  const uint8_t DAC_B_BIN = 2;     // 010
+  const uint8_t DAC_2_BIN = 4;     // 100
+  
+  // Control channel addresses
+  const uint8_t NOP_BIN = 0;       // 000
+  const uint8_t TOGGLES_BIN = 1;   // 001
+  const uint8_t CLR_BIN = 4;       // 100
+  const uint8_t LOAD_BIN = 5;      // 101
+  
+  // Output range select register
+  const uint8_t DAC_UNI_5_BIN = 0;    // 000
+  const uint8_t DAC_UNI_10_BIN= 1;   // 001
+  const uint8_t DAC_UNI_108_BIN = 2;  // 010
+  const uint8_t DAC_BI_5_BIN = 3;     // 011
+  const uint8_t DAC_BI_10_BIN = 4;    // 100
+  const uint8_t DAC_BI_108_BIN = 5;   // 101
 
 
 //////////////////////////////////////////////////////////////////////
@@ -180,6 +194,7 @@ void setup() {
   SPI.begin();              // Initializes the SPI protocol
 
 }
+
 
 ////////////////////
 // EXECUTION LOOP //
@@ -204,6 +219,7 @@ void loop() {
     }
   }
 }
+
 
 //////////////////////
 // COMMAND HANDLING //
@@ -235,6 +251,7 @@ void executeCommand(QueueArray <uint8_t> &command){
 void purge(QueueArray <uint8_t> &queue){
   while(!queue.isEmpty()) queue.pop();
 }
+
 
 ///////////////////
 // DDS COMMANDS //
@@ -281,8 +298,8 @@ void DACcommand(QueueArray <uint8_t> &command){
     purge(command);
     return;
   }
-  else if (command.front() == DAC_READ)   {rw = READ_BIN;}
-  else if (command.front() == DAC_WRITE)  {rw = WRITE_BIN;}
+  else if (command.front() == DAC_READ)   {rw = DAC_READ_BIN;}
+  else if (command.front() == DAC_WRITE)  {rw = DAC_WRITE_BIN;}
   else{
     purge(command);
     return;
@@ -315,9 +332,10 @@ void DACcommand(QueueArray <uint8_t> &command){
   
 }
 
-///////////////////////
-// SPI DATA HANDLING //
-///////////////////////
+
+///////////////////////////
+// DAC SPI DATA HANDLING //
+///////////////////////////
 
 // sends 24-bit sequence to the DAC
 void DACsendData(uint8_t header, uint16_t data, SPISettings settings){
@@ -352,24 +370,24 @@ void DACrunSetup(uint8_t polarity, uint8_t gain_mode){
   }
 
   // Sets up output range as DAC_BIPOLAR or DAC_UNIPOLAR
-  uint8_t rangeHeaderA = DACheaderConstructor(WRITE_BIN, RANGE_REGISTER_BIN, DAC_A_BIN);        // I have to DAC_WRITE to all 3 of these channels individually.
-  uint8_t rangeHeaderB = DACheaderConstructor(WRITE_BIN, RANGE_REGISTER_BIN, DAC_B_BIN);        // Writing to "BOTH" apparently isn't enough smh.
-  uint8_t rangeHeaderBoth = DACheaderConstructor(WRITE_BIN, RANGE_REGISTER_BIN, DAC_2_BIN);
+  uint8_t rangeHeaderA = DACheaderConstructor(DAC_WRITE_BIN, RANGE_REGISTER_BIN, DAC_A_BIN);        // I have to DAC_WRITE to all 3 of these channels individually.
+  uint8_t rangeHeaderB = DACheaderConstructor(DAC_WRITE_BIN, RANGE_REGISTER_BIN, DAC_B_BIN);        // Writing to "BOTH" apparently isn't enough smh.
+  uint8_t rangeHeaderBoth = DACheaderConstructor(DAC_WRITE_BIN, RANGE_REGISTER_BIN, DAC_2_BIN);
   if (polarity == DAC_BIPOLAR){
     if(gain_mode == DAC_GAIN_2){
-      DACsendData(rangeHeaderA, BI_5_BIN, DEFAULT_SETTINGS);
-      DACsendData(rangeHeaderB, BI_5_BIN, DEFAULT_SETTINGS);
-      DACsendData(rangeHeaderBoth, BI_5_BIN, DEFAULT_SETTINGS);
+      DACsendData(rangeHeaderA, DAC_BI_5_BIN, DEFAULT_SETTINGS);
+      DACsendData(rangeHeaderB, DAC_BI_5_BIN, DEFAULT_SETTINGS);
+      DACsendData(rangeHeaderBoth, DAC_BI_5_BIN, DEFAULT_SETTINGS);
     }
     else if (gain_mode == DAC_GAIN_4){
-      DACsendData(rangeHeaderA, BI_10_BIN, DEFAULT_SETTINGS);
-      DACsendData(rangeHeaderB, BI_10_BIN, DEFAULT_SETTINGS);
-      DACsendData(rangeHeaderBoth, BI_10_BIN, DEFAULT_SETTINGS);
+      DACsendData(rangeHeaderA, DAC_BI_10_BIN, DEFAULT_SETTINGS);
+      DACsendData(rangeHeaderB, DAC_BI_10_BIN, DEFAULT_SETTINGS);
+      DACsendData(rangeHeaderBoth, DAC_BI_10_BIN, DEFAULT_SETTINGS);
     }
     else if (gain_mode == DAC_GAIN_432){
-      DACsendData(rangeHeaderA, BI_108_BIN, DEFAULT_SETTINGS);
-      DACsendData(rangeHeaderB, BI_108_BIN, DEFAULT_SETTINGS);
-      DACsendData(rangeHeaderBoth, BI_108_BIN, DEFAULT_SETTINGS);
+      DACsendData(rangeHeaderA, DAC_BI_108_BIN, DEFAULT_SETTINGS);
+      DACsendData(rangeHeaderB, DAC_BI_108_BIN, DEFAULT_SETTINGS);
+      DACsendData(rangeHeaderBoth, DAC_BI_108_BIN, DEFAULT_SETTINGS);
     }
     else{
       return;
@@ -378,19 +396,19 @@ void DACrunSetup(uint8_t polarity, uint8_t gain_mode){
   }
   else{
     if (gain_mode == DAC_GAIN_2){
-      DACsendData(rangeHeaderA, UNI_5_BIN, DEFAULT_SETTINGS);
-      DACsendData(rangeHeaderB, UNI_5_BIN, DEFAULT_SETTINGS);
-      DACsendData(rangeHeaderBoth, UNI_5_BIN, DEFAULT_SETTINGS);
+      DACsendData(rangeHeaderA, DAC_UNI_5_BIN, DEFAULT_SETTINGS);
+      DACsendData(rangeHeaderB, DAC_UNI_5_BIN, DEFAULT_SETTINGS);
+      DACsendData(rangeHeaderBoth, DAC_UNI_5_BIN, DEFAULT_SETTINGS);
     }
     else if (gain_mode == DAC_GAIN_4){
-      DACsendData(rangeHeaderA, UNI_10_BIN, DEFAULT_SETTINGS);
-      DACsendData(rangeHeaderB, UNI_10_BIN, DEFAULT_SETTINGS);
-      DACsendData(rangeHeaderBoth, UNI_10_BIN, DEFAULT_SETTINGS);
+      DACsendData(rangeHeaderA, DAC_UNI_10_BIN, DEFAULT_SETTINGS);
+      DACsendData(rangeHeaderB, DAC_UNI_10_BIN, DEFAULT_SETTINGS);
+      DACsendData(rangeHeaderBoth, DAC_UNI_10_BIN, DEFAULT_SETTINGS);
     }
     else if (gain_mode == DAC_GAIN_432){
-      DACsendData(rangeHeaderA, UNI_108_BIN, DEFAULT_SETTINGS);
-      DACsendData(rangeHeaderB, UNI_108_BIN, DEFAULT_SETTINGS);
-      DACsendData(rangeHeaderBoth, UNI_108_BIN, DEFAULT_SETTINGS);
+      DACsendData(rangeHeaderA, DAC_UNI_108_BIN, DEFAULT_SETTINGS);
+      DACsendData(rangeHeaderB, DAC_UNI_108_BIN, DEFAULT_SETTINGS);
+      DACsendData(rangeHeaderBoth, DAC_UNI_108_BIN, DEFAULT_SETTINGS);
     }
     else{
       return;
@@ -399,7 +417,7 @@ void DACrunSetup(uint8_t polarity, uint8_t gain_mode){
 
 
   // Sets up DAC preferences
-  uint8_t controlToggleHeader = DACheaderConstructor(WRITE_BIN, CONTROL_REGISTER_BIN, TOGGLES_BIN);
+  uint8_t controlToggleHeader = DACheaderConstructor(DAC_WRITE_BIN, CONTROL_REGISTER_BIN, TOGGLES_BIN);
   /* CONTROL TOGGLES OPERATION GUIDE
    * 
    * Thermal SD       0 = No thermal shutdown         1 = Enable thermal shutdown
@@ -416,7 +434,7 @@ void DACrunSetup(uint8_t polarity, uint8_t gain_mode){
 
 
   // Powers up the DAC channels
-  uint8_t powerHeader = DACheaderConstructor(WRITE_BIN, POWER_REGISTER_BIN, uint16_t(0));
+  uint8_t powerHeader = DACheaderConstructor(DAC_WRITE_BIN, POWER_REGISTER_BIN, uint16_t(0));
   /* POWER OPERATION GUIDE
    * 
    * Data bits are as follows:
@@ -436,7 +454,7 @@ void DACrunSetup(uint8_t polarity, uint8_t gain_mode){
   
 
   // Sends the function to update and load the DAC data
-  uint8_t loadHeader = DACheaderConstructor(WRITE_BIN, CONTROL_REGISTER_BIN, LOAD_BIN);
+  uint8_t loadHeader = DACheaderConstructor(DAC_WRITE_BIN, CONTROL_REGISTER_BIN, LOAD_BIN);
   DACsendData(loadHeader, uint16_t(0), DEFAULT_SETTINGS);
 
 
@@ -452,7 +470,7 @@ void DACrunSetup(uint8_t polarity, uint8_t gain_mode){
 
 // Sends the function to update and load the DAC data
 void DACloadData (){
-  uint8_t loadHeader = DACheaderConstructor(WRITE_BIN, CONTROL_REGISTER_BIN, LOAD_BIN);
+  uint8_t loadHeader = DACheaderConstructor(DAC_WRITE_BIN, CONTROL_REGISTER_BIN, LOAD_BIN);
   DACsendData(loadHeader, uint16_t(0), DEFAULT_SETTINGS);
 }
 
