@@ -63,6 +63,7 @@
 #include <math.h>           // Math library
 #include <stdint.h>         // So I can use nice data structures
 #include <QueueArray.h>     // Library for creating command sequences
+#include <StackArray.h>     // Library for creating data stacks (used for byte sequences of variable lengths)
 
 
 //////////////////////////////////////////////////////////////////////
@@ -112,9 +113,10 @@ const uint8_t DONE = '!';
 
   // Four modes of operation
   const uint8_t DDS_SINGLE_TONE = 's';
-  const uint8_t DDS_RAM = 'R';
   const uint8_t DDS_RAMP = 'r';
-  const uint8_t DDS_RAMP_SETUP = 's';
+    const uint8_t DDS_RAMP_SETUP = 's';
+      const uint8_t DDS_RAMP_REGISTERS_BIN  [3] = {11, 12, 13};
+  const uint8_t DDS_RAM = 'R';
   const uint8_t DDS_PARALLEL = 'p';
 
   // What type of programming to the DDS to preform
@@ -374,14 +376,25 @@ void ramplitude(int_fast16_t amplitude){
   return;
 }
 
+// Converts an integer to a stack of bytes
+StackArray <uint8_t> intToBytes(uint_fast64_t integer){
+  uint_fast64_t data = integer;
+  StackArray <uint8_t> bytes;
+  while(data > 0){
+    bytes.push((uint8_t)data);
+    data = data >> 8;
+  }
+  return bytes;
+}
+
 
 // sends variable-sized byte sequence to the DDS
-void DDSsendData(uint8_t *arrayBytes, int_fast8_t arraySize, SPISettings settings){
+void DDSsendData(QueueArray <uint8_t> &bytesToSend, SPISettings settings){
 
   SPI.beginTransaction(settings);
   digitalWrite(SS_DDS, LOW);
-  for (int_fast8_t i = 0; i < arraySize, i++;){
-    SPI.transfer(arrayBytes[i]);
+  while(!bytesToSend.isEmpty()){
+    SPI.transfer(bytesToSend.pop());
   }
   digitalWrite(SS_DDS, HIGH);
   SPI.endTransaction();
