@@ -102,11 +102,20 @@ DONE = '!'
 # DDS COMMANDS #
 ################
 
+# What type of programming to the DDS to preform
+DDS_CONTROL = 'C'                       # Control function registers
+DDS_CONTROL_MODES = ['1', '2', '3']
+DDS_OUTPUT = 'o'                        # Signifies programming some sort of output
+
 # Four modes of operation
 DDS_SINGLE_TONE = 's'
 DDS_RAM = 'R'
 DDS_RAMP = 'r'
+DDS_RAMP_SETUP = 's'
 DDS_PARALLEL = 'p'
+
+# Single Tone / RAM profiles
+DDS_PROFILES = ['0', '1', '2', '3', '4', '5', '6', '7']
 
 #################
 # PMIC COMMANDS #

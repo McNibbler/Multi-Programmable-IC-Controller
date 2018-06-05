@@ -72,7 +72,8 @@
 ///////////////
 
 // Pins
-//const int_fast8_t SS = 10;
+const int_fast8_t SS_DDS = 9;
+const int_fast8_t SS_DAC = 10;
 //const int_fast8_t SDI = 11;
 //const int_fast8_t SDO = 12;
 //const int_fast8_t CLK = 13;
@@ -113,9 +114,20 @@ const uint8_t DONE = '!';
   const uint8_t DDS_SINGLE_TONE = 's';
   const uint8_t DDS_RAM = 'R';
   const uint8_t DDS_RAMP = 'r';
+  const uint8_t DDS_RAMP_SETUP = 's';
   const uint8_t DDS_PARALLEL = 'p';
 
+  // What type of programming to the DDS to preform
+  const uint8_t DDS_CONTROL = 'C';                        // Control function registers
+  const uint8_t DDS_CONTROL_MODES [3] = {'1', '2', '3'};
+  const uint8_t DDS_CONTROL_MODES_BIN [3] = {0, 1, 2};
+  const uint8_t DDS_OUTPUT = 'o';                         // Signifies programming some sort of output
 
+  // Single tone / RAM profiles
+  const uint8_t DDS_PROFILES [8] = {'0', '1', '3', '4', '5', '6', '7'};
+  const uint8_t DDS_PROFILES_BIN [8] = {14, 15, 16, 17, 18, 19, 20, 21};
+  
+  
 ///////////////////
 // PMIC COMMANDS //
 ///////////////////
@@ -191,14 +203,24 @@ const uint8_t DONE = '!';
 // SETUP //
 ///////////
 
+// Initialization
 void setup() {
-  
-  // Initialization
-  digitalWrite(SS, HIGH);   // Set up slave-select pin. SPI lib handles others
-  pinMode(LDAC, OUTPUT);    // Sets LDAC to low because synchronous updating isn't important for this
+
+  // Set up slave-select pins. SPI lib handles others
+  pinMode(SS_DDS, OUTPUT);
+  pinMode(SS_DAC, OUTPUT);
+  digitalWrite(SS_DDS, HIGH);
+  digitalWrite(SS_DAC, HIGH);
+
+  // Sets LDAC to low because synchronous updating isn't important for this
+  pinMode(LDAC, OUTPUT);
   digitalWrite(LDAC, LOW);
-  Serial.begin(9600);       // Starts serial communication through USB for debugging
-  SPI.begin();              // Initializes the SPI protocol
+
+  // Initializes Serial communication through USB for commands
+  Serial.begin(9600);
+  
+  // Initializes the SPI protocol
+  SPI.begin();
 
 }
 
@@ -239,14 +261,20 @@ void executeCommand(QueueArray <uint8_t> &command){
   if (command.front() == DAC_INDICATOR){
     command.pop();
     DACcommand(command);
+    purge(command);
+    return;
   }
   else if (command.front() == PMIC_INDICATOR){
     command.pop();
     PMICcommand(command);
+    purge(command);
+    return;
   }
   else if (command.front() == DDS_INDICATOR){
     command.pop();
     DDScommand(command);
+    purge(command);
+    return;
   }
   else{
     purge(command);
@@ -264,12 +292,86 @@ void purge(QueueArray <uint8_t> &queue){
 // DDS COMMANDS //
 ///////////////////
 
-// To be implemented
+// Handles the front command to see whether or not it is for control or output
 void DDScommand(QueueArray <uint8_t> &command){
 
+  uint8_t front = command.pop();
+
+  if (front == DDS_CONTROL){
+    DDScontrolHandler(command);
+    purge(command);
+    return;
+  }
+  else if (front == DDS_OUTPUT){
+    DDSoutputHandler(command);
+    purge(command);
+    return;
+  }
+  else{
+    purge(command);
+    return;
+  }
+
+}
+
+// lol idfk yet bear with me
+void DDScontrolHandler(QueueArray <uint8_t> &command){
   purge(command);
   return;
+}
 
+// handles the different output possibilities
+void DDSoutputHandler(QueueArray <uint8_t> &command){
+  uint8_t front = command.pop();
+
+  // Creates a single constant wave of one frequency, amplitude, and phase
+  if (front = DDS_SINGLE_TONE){
+    purge(command);
+    return;
+  }
+  
+  // Creates a digital ramp of differnt frequencies to produce different sine waves
+  else if (front = DDS_RAMP){
+    if (command.front() == DDS_RAMP_SETUP){
+      command.pop();
+      DDSrampSetup(command);
+      purge(command);
+      return;
+    }
+
+    String amplitudeString;
+    while (command.front() != '!'){
+      amplitudeString += (char)command.pop();
+    }
+    int_fast16_t amplitude = amplitudeString.toInt();
+    ramplitude(amplitude);
+    purge(command);
+    return;
+  }
+
+  // Expandable if I want to implement RAM or parallel programming later (I probably won't)
+  else if (front = DDS_RAM || front == DDS_PARALLEL){
+    purge(command);
+    return;
+  }
+
+  // Catch exceptions and purge
+  else{
+    purge(command);
+    return;
+  }
+  
+}
+
+// Parses the rest of the command for the setup for the DRG
+void DDSrampSetup(QueueArray <uint8_t> &command){
+  purge(command);
+  return;
+}
+
+// I'm so happy that I could name a function this
+void ramplitude(int_fast16_t amplitude){
+  return;
 }
 
 
@@ -347,10 +449,10 @@ void DACcommand(QueueArray <uint8_t> &command){
 // sends 24-bit sequence to the DAC
 void DACsendData(uint8_t header, uint16_t data, SPISettings settings){
   SPI.beginTransaction(settings);
-  digitalWrite(SS, LOW);
+  digitalWrite(SS_DAC, LOW);
   SPI.transfer(header);
   SPI.transfer16(data);
-  digitalWrite(SS, HIGH);
+  digitalWrite(SS_DAC, HIGH);
   SPI.endTransaction();
   
   delayMicroseconds(30);        // Mostly arbitrary, but it's a good amount of delay relative to everything
