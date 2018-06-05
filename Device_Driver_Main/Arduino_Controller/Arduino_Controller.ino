@@ -375,6 +375,21 @@ void ramplitude(int_fast16_t amplitude){
 }
 
 
+// sends variable-sized byte sequence to the DDS
+void DDSsendData(uint8_t *arrayBytes, int_fast8_t arraySize, SPISettings settings){
+
+  SPI.beginTransaction(settings);
+  digitalWrite(SS_DDS, LOW);
+  for (int_fast8_t i = 0; i < arraySize, i++;){
+    SPI.transfer(arrayBytes[i]);
+  }
+  digitalWrite(SS_DDS, HIGH);
+  SPI.endTransaction();
+  delayMicroseconds(30);        // Mostly arbitrary, but it's a good amount of delay relative to everything
+}
+
+
+
 ///////////////////
 // PMIC COMMANDS //
 ///////////////////
