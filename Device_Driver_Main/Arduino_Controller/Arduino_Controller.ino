@@ -63,7 +63,7 @@
 #include <math.h>           // Math library
 #include <stdint.h>         // So I can use nice data structures
 #include <QueueArray.h>     // Library for creating command sequences
-#include <StackArray.h>     // Library for creating data stacks (used for byte sequences of variable lengths)
+#include <ArduinoSTL.h>
 
 
 //////////////////////////////////////////////////////////////////////
@@ -75,10 +75,10 @@
 // Pins
 const int_fast8_t SS_DDS = 9;
 const int_fast8_t SS_DAC = 10;
-//const int_fast8_t SDI = 11;
-//const int_fast8_t SDO = 12;
-//const int_fast8_t CLK = 13;
-const int_fast8_t LDAC = 8;
+// const int_fast8_t LDAC = 8;
+// SDI = 11;
+// SDO = 12;
+// CLK = 13;
 
 // SPI settings
 const int_fast16_t CLOCK_SPEED = 10000;    // DAC is rated for 30MHz, Arduino clock is much lower? Signal started looking really bad @100kHz
@@ -110,12 +110,17 @@ const uint8_t DONE = '!';
 //////////////////
 
   // when u yeet so hard u get yote
+  const uint8_t DDS_READ = 'r';
+  const uint8_t DDS_WRITE = 'w';
+  const uint8_t DDS_READ_BIN = 1;
+  const uint8_t DDS_WRITE_BIN = 0;
 
   // Four modes of operation
   const uint8_t DDS_SINGLE_TONE = 's';
   const uint8_t DDS_RAMP = 'r';
     const uint8_t DDS_RAMP_SETUP = 's';
       const uint8_t DDS_RAMP_REGISTERS_BIN  [3] = {11, 12, 13};
+    const uint8_t DDS_RAMP_PARAMETERS = 'p';
   const uint8_t DDS_RAM = 'R';
   const uint8_t DDS_PARALLEL = 'p';
 
@@ -215,8 +220,8 @@ void setup() {
   digitalWrite(SS_DAC, HIGH);
 
   // Sets LDAC to low because synchronous updating isn't important for this
-  pinMode(LDAC, OUTPUT);
-  digitalWrite(LDAC, LOW);
+  // pinMode(LDAC, OUTPUT);
+  // digitalWrite(LDAC, LOW);
 
   // Initializes Serial communication through USB for commands
   Serial.begin(9600);
@@ -334,19 +339,29 @@ void DDSoutputHandler(QueueArray <uint8_t> &command){
   
   // Creates a digital ramp of differnt frequencies to produce different sine waves
   else if (front = DDS_RAMP){
-    if (command.front() == DDS_RAMP_SETUP){
-      command.pop();
+
+    uint8_t newFront = command.pop();
+    
+    if (newFront == DDS_RAMP_SETUP){
       DDSrampSetup(command);
       purge(command);
       return;
     }
 
-    String amplitudeString;
-    while (command.front() != '!'){
-      amplitudeString += (char)command.pop();
+    /*
+
+    else if (newFront == DDS_RAMP_PARAMETERS){
+      
+      uint64_t parameters[3] = DDSrampParameters(command);
+
+      
+      
+      purge(command);
+      return;
+
+      
     }
-    int_fast16_t amplitude = amplitudeString.toInt();
-    ramplitude(amplitude);
+    */
     purge(command);
     return;
   }
@@ -371,19 +386,56 @@ void DDSrampSetup(QueueArray <uint8_t> &command){
   return;
 }
 
+// Sets the parameters
+uint64_t * DDSrampParameters(QueueArray <uint8_t> &command){
+  
+  String paramStr[3] = {"x"};
+
+  uint64_t parameters[3] = {NULL};
+
+  /*
+  for (uint8_t i = 0; i < length(parameters); i++){
+    
+    while (command.front() != ','){
+      paramStr[i] += (char)command.pop();
+    }
+
+    if (paramStr[i] != 'x'){
+      parameters[i] = paramStr[i].toInt();
+    }
+
+    command.pop();
+    
+  }
+
+  */
+  return parameters;
+}
+
+
 // I'm so happy that I could name a function this
 void ramplitude(int_fast16_t amplitude){
   return;
 }
 
 // Converts an integer to a stack of bytes
-StackArray <uint8_t> intToBytes(uint_fast64_t integer){
+QueueArray <uint8_t> intToBytes(uint_fast64_t integer, uint_fast8_t bufferSize){
   uint_fast64_t data = integer;
-  StackArray <uint8_t> bytes;
-  while(data > 0){
-    bytes.push((uint8_t)data);
+  QueueArray <uint8_t> bytesFlipped;
+  QueueArray <uint8_t> bytes;
+
+  //pushes to a queue of the length of the number of bytes in the buffer.
+  for(uint_fast8_t i = 0; i < bufferSize; i++){
+    bytesFlipped.push((uint8_t)data);
     data = data >> 8;
   }
+
+  // Treats the queue more as a stack for the data to maintain MSB first.
+  // Still using queue library over one for stacks for the sake of compatibility to other functions.
+  while(!bytesFlipped.isEmpty()){
+    bytes.push(bytesFlipped.pop());
+  }
+
   return bytes;
 }
 
@@ -401,6 +453,13 @@ void DDSsendData(QueueArray <uint8_t> &bytesToSend, SPISettings settings){
   delayMicroseconds(30);        // Mostly arbitrary, but it's a good amount of delay relative to everything
 }
 
+// Another beautifully named function. Creates an instruction byte for communicating to the selected DDS register.
+uint8_t DDSinstructionConstruction(uint8_t rwBin, uint8_t registerValue){
+  uint8_t byteBoi;
+  byteBoi += rwBin << 7;
+  byteBoi += registerValue;
+  return byteBoi;
+}
 
 
 ///////////////////
