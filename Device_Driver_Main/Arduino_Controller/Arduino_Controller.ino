@@ -63,7 +63,10 @@
 #include <math.h>           // Math library
 #include <stdint.h>         // So I can use nice data structures
 #include <QueueArray.h>     // Library for creating command sequences
-#include <ArduinoSTL.h>
+#include <StandardCplusplus.h>
+#include <vector>
+
+using namespace std;
 
 
 //////////////////////////////////////////////////////////////////////
@@ -387,14 +390,13 @@ void DDSrampSetup(QueueArray <uint8_t> &command){
 }
 
 // Sets the parameters
-uint64_t * DDSrampParameters(QueueArray <uint8_t> &command){
+vector <uint8_t> DDSrampParameters(QueueArray <uint8_t> &command){
   
-  String paramStr[3] = {"x"};
+  vector <String> paramStr;
 
-  uint64_t parameters[3] = {NULL};
+  vector <uint8_t> parameters = {NULL, NULL, NULL};
 
-  /*
-  for (uint8_t i = 0; i < length(parameters); i++){
+  for (uint8_t i = 0; i < parameters.size(); i++){
     
     while (command.front() != ','){
       paramStr[i] += (char)command.pop();
@@ -408,7 +410,6 @@ uint64_t * DDSrampParameters(QueueArray <uint8_t> &command){
     
   }
 
-  */
   return parameters;
 }
 
