@@ -59,12 +59,12 @@
 // LIBRARIES //
 ///////////////
 
-#include <SPI.h>            // SPI communication for the DAC
-#include <math.h>           // Math library
-#include <stdint.h>         // So I can use nice data structures
-#include <QueueArray.h>     // Library for creating command sequences
-#include <StandardCplusplus.h>
-#include <vector>
+#include <SPI.h>                // SPI communication for the DAC
+#include <math.h>               // Math library
+#include <stdint.h>             // So I can use nice data structures
+#include <StandardCplusplus.h>  // Praise the lord that someone actually ported the C++ STL to Arduino
+#include <vector>               // Because traditional arrays are a pain and I only mess with that object oriented life
+#include <QueueArray.h>         // Library for creating command sequences
 
 using namespace std;
 
@@ -76,15 +76,15 @@ using namespace std;
 ///////////////
 
 // Pins
-const int_fast8_t SS_DDS = 9;
-const int_fast8_t SS_DAC = 10;
-// const int_fast8_t LDAC = 8;
+const uint_fast8_t SS_DDS = 9;
+const uint_fast8_t SS_DAC = 10;
+// const uint_fast8_t LDAC = 8;
 // SDI = 11;
 // SDO = 12;
 // CLK = 13;
 
 // SPI settings
-const int_fast16_t CLOCK_SPEED = 10000;    // DAC is rated for 30MHz, Arduino clock is much lower? Signal started looking really bad @100kHz
+const uint_fast16_t CLOCK_SPEED = 10000;    // DAC is rated for 30MHz, Arduino clock is much lower? Signal started looking really bad @100kHz
 SPISettings DEFAULT_SETTINGS(CLOCK_SPEED, MSBFIRST, SPI_MODE2);
 
 
@@ -153,8 +153,8 @@ const uint8_t DONE = '!';
 //////////////////
 
   // DAC Information
-  const int_fast8_t MAX_BITS = 16;          // Number of Bits after the initial header
-  const int_fast8_t BITS = 14;              // Number of Bits of precision for the DAC being used
+  const uint_fast8_t MAX_BITS = 16;          // Number of Bits after the initial header
+  const uint_fast8_t BITS = 14;              // Number of Bits of precision for the DAC being used
 
   // Constant bytes that represent the characters being sent as commands
   const uint8_t DAC_READ = 'r';
@@ -326,8 +326,33 @@ void DDScommand(QueueArray <uint8_t> &command){
 
 // lol idfk yet bear with me
 void DDScontrolHandler(QueueArray <uint8_t> &command){
+  uint8_t front = command.pop();
+
   purge(command);
   return;
+}
+
+// Sets the parameters (I HAVE TO MAKE THIS FUNCTION BEFORE DDSoutputHandler(); because it braeaks when using vectors for... some reason?)
+vector <uint64_t> DDSrampParameters(QueueArray <uint8_t> &command){
+  
+  vector <String> paramStr;
+
+  vector <uint64_t> parameters = {NULL, NULL, NULL};
+
+  for (uint8_t i = 0; i < parameters.size(); i++){
+
+    while (command.front() != ','){
+      paramStr[i] += (char)command.pop();
+    }
+    
+    if (paramStr[i] != 'x'){
+      parameters[i] = paramStr[i].toInt();
+    }
+
+    command.pop();
+  }
+
+  return parameters;
 }
 
 // handles the different output possibilities
@@ -351,20 +376,20 @@ void DDSoutputHandler(QueueArray <uint8_t> &command){
       return;
     }
 
-    /*
-
     else if (newFront == DDS_RAMP_PARAMETERS){
       
-      uint64_t parameters[3] = DDSrampParameters(command);
+      vector <uint64_t> parameters = {NULL, NULL, NULL};
+      parameters = DDSrampParameters(command);
 
-      
-      
+      DDSsendRamplitude(parameters[0]);
+      DDSsendRampPhase(parameters[1]);
+      DDSsendRampFrequency(parameters[2]);
+
       purge(command);
       return;
-
       
     }
-    */
+
     purge(command);
     return;
   }
@@ -389,35 +414,28 @@ void DDSrampSetup(QueueArray <uint8_t> &command){
   return;
 }
 
-// Sets the parameters
-vector <uint8_t> DDSrampParameters(QueueArray <uint8_t> &command){
-  
-  vector <String> paramStr;
-
-  vector <uint8_t> parameters = {NULL, NULL, NULL};
-
-  for (uint8_t i = 0; i < parameters.size(); i++){
-    
-    while (command.front() != ','){
-      paramStr[i] += (char)command.pop();
-    }
-
-    if (paramStr[i] != 'x'){
-      parameters[i] = paramStr[i].toInt();
-    }
-
-    command.pop();
-    
-  }
-
-  return parameters;
-}
-
-
 // I'm so happy that I could name a function this
-void ramplitude(int_fast16_t amplitude){
+void DDSsendRamplitude(uint16_t amplitude){
+  if (amplitude == NULL){
+    return;
+  }
   return;
 }
+
+void DDSsendRampPhase(uint16_t phase){
+  if (phase == NULL){
+    return;
+  }
+  return;
+}
+
+void DDSsendRampFrequency(uint16_t frequency){
+  if (frequency == NULL){
+    return;
+  }
+  return;
+}
+
 
 // Converts an integer to a stack of bytes
 QueueArray <uint8_t> intToBytes(uint_fast64_t integer, uint_fast8_t bufferSize){
