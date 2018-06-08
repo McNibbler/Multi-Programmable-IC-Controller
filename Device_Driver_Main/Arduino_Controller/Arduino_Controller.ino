@@ -136,7 +136,30 @@ const uint8_t DONE = '!';
   // Single tone / RAM profiles
   const uint8_t DDS_PROFILES [8] = {'0', '1', '3', '4', '5', '6', '7'};
   const uint8_t DDS_PROFILES_BIN [8] = {14, 15, 16, 17, 18, 19, 20, 21};
-  
+
+  // REGISTER MAP
+  const uint8_t DDS_CFR1_BIN = 0x00;
+  const uint8_t DDS_CFR2_BIN = 0x01;
+  const uint8_t DDS_CFR3_BIN = 0x02;
+  const uint8_t DDS_AUX_DAC_BIN = 0x03;
+  const uint8_t DDS_IO_UPDATE_RATE_BIN = 0x04;
+  const uint8_t DDS_FTW_BIN = 0x07;
+  const uint8_t DDS_POW_BIN = 0x08;
+  const uint8_t DDS_ASF_BIN = 0x09;
+  const uint8_t DDS_MULTICHIP_SYNC_BIN = 0x0A;
+  const uint8_t DDS_RAMP_LIMIT_BIN = 0x0B;
+  const uint8_t DDS_RAMP_STEP_SIZE_BIN = 0x0C;
+  const uint8_t DDS_RAMP_RATE_BIN = 0x0D;
+  const uint8_t DDS_PROFILE_0_BIN = 0x0E;
+  const uint8_t DDS_PROFILE_1_BIN = 0x0F;
+  const uint8_t DDS_PROFILE_2_BIN = 0x10;
+  const uint8_t DDS_PROFILE_3_BIN = 0x11;
+  const uint8_t DDS_PROFILE_4_BIN = 0x12;
+  const uint8_t DDS_PROFILE_5_BIN = 0x13;
+  const uint8_t DDS_PROFILE_6_BIN = 0x14;
+  const uint8_t DDS_PROFILE_7_BIN = 0x15;
+  const uint8_t DDS_RAM_BIN = 0x16;
+
   
 ///////////////////
 // PMIC COMMANDS //
@@ -327,6 +350,20 @@ void DDScommand(QueueArray <uint8_t> &command){
 // lol idfk yet bear with me
 void DDScontrolHandler(QueueArray <uint8_t> &command){
   uint8_t front = command.pop();
+
+  if (front == '1'){
+
+  }
+  else if (front == '2'){
+
+  }
+  else if (front == '3'){
+
+  }
+  else{
+    purge(command);
+    return;
+  }
 
   purge(command);
   return;
