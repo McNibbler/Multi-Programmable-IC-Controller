@@ -137,6 +137,10 @@ const uint8_t DONE = '!';
   const uint8_t DDS_PROFILES [8] = {'0', '1', '3', '4', '5', '6', '7'};
   const uint8_t DDS_PROFILES_BIN [8] = {14, 15, 16, 17, 18, 19, 20, 21};
 
+  const uint8_t DDS_FREQUENCY = 'f';
+  const uint8_t DDS_PHASE = 'p';
+  const uint8_t DDS_AMPLITUDE = 'a';
+
   // REGISTER MAP
   const uint8_t DDS_CFR1_BIN = 0x00;
   const uint8_t DDS_CFR2_BIN = 0x01;
@@ -445,11 +449,164 @@ void DDSoutputHandler(QueueArray <uint8_t> &command){
   
 }
 
+
+
+
+// Converts an integer to a stack of bytes
+QueueArray <uint8_t> intToBytes(uint_fast64_t integer, uint_fast8_t bufferSize){
+  uint_fast64_t data = integer;
+  QueueArray <uint8_t> bytesFlipped;
+  QueueArray <uint8_t> bytes;
+
+  //pushes to a queue of the length of the number of bytes in the buffer.
+  for(uint_fast8_t i = 0; i < bufferSize; i++){
+    bytesFlipped.push((uint8_t)data);
+    data = data >> 8;
+  }
+
+  // Treats the queue more as a stack for the data to maintain MSB first.
+  // Still using queue library over one for stacks for the sake of compatibility to other functions.
+  while(!bytesFlipped.isEmpty()){
+    bytes.push(bytesFlipped.pop());
+  }
+
+  return bytes;
+}
+
+
+
 // Parses the rest of the command for the setup for the DRG
 void DDSrampSetup(QueueArray <uint8_t> &command){
+  uint8_t front = command.pop();
+
+  // Table 17 for general register map and bit descriptions
+  // Table 19 for control register 2 details
+  QueueArray <uint8_t> controlBytes;
+  
+  // Register for the second control register (with the DRG Settings)
+  controlBytes.push(DDS_CFR2_BIN);
+
+  // Default first byte. 7 reserved open bits and amplitude scaler bypassed
+  controlBytes.push((uint8_t)0);
+
+  uint8_t nextByte;
+  nextByte = 1 << 6; // SYNC_CLK Enable (Default)
+  nextByte = 1 << 3; // Digital Ramp Enable
+
+  // See table 11 in data sheet for digital ramp destinations
+  if (front == DDS_FREQUENCY){
+    nextByte += 0 << 4;       
+  }
+  else if (front == DDS_PHASE){
+    nextByte += 1 << 4;
+  }
+  else if (front == DDS_AMPLITUDE){
+    nextByte += 2 << 4;
+  }
+  else{
+    purge(command);
+    return;
+  }
+
+  controlBytes.push(nextByte);
+
+  // Defaults
+  controlBytes.push(0x08);
+  controlBytes.push(0x20);
+
+
+  ///// RAMP SETUP BYTES /////
+  
+  // LIMITS
+  QueueArray <uint8_t> limitsBytes;
+  limitsBytes.push(DDS_RAMP_LIMIT_BIN); // Limits register
+  String startStr;
+  String finishStr;
+  uint32_t start;
+  uint32_t finish;
+  uint64_t limits;
+  
+  while (command.front() != ','){
+    startStr += command.pop();
+  }
+  start = startStr.toInt();
+  command.pop();
+  while (command.front() != ','){
+    finishStr += command.pop();
+  }
+  finish = finishStr.toInt();
+  command.pop();
+  
+  limits = (start << 32) + finish;
+
+  QueueArray <uint8_t> limitsData = intToBytes(limits, 8);
+  while (!limitsData.isEmpty()){
+    limitsBytes.push(limitsData.pop());
+  }
+
+  // STEP SIZE
+  QueueArray <uint8_t> stepBytes;
+  stepBytes.push(DDS_RAMP_STEP_SIZE_BIN); // Step register
+  String decrementStr;
+  String incrementStr;
+  uint32_t decrement;
+  uint32_t increment;
+  uint64_t stepSize;
+
+  while (command.front() != ','){
+    decrementStr += command.pop();
+  }
+  decrement = decrementStr.toInt();
+  command.pop();
+  while (command.front() != ','){
+    incrementStr += command.pop();
+  }
+  increment = incrementStr.toInt();
+  command.pop();
+
+  stepSize = (decrement << 32) + increment;
+
+  QueueArray <uint8_t> stepSizeData = intToBytes(stepSize, 8);
+  while (!stepSizeData.isEmpty()){
+    stepBytes.push(stepSizeData.pop());
+  }
+
+  // RAMP RATE
+  QueueArray <uint8_t> rateBytes;
+  rateBytes.push(DDS_RAMP_RATE_BIN);  // Rate register
+  String negativeRateStr;
+  String positiveRateStr;
+  uint16_t negativeRate;
+  uint16_t positiveRate;
+  uint32_t rate;
+
+  while (command.front() != ','){
+    negativeRateStr += command.pop();
+  }
+  negativeRate = negativeRateStr.toInt();
+  command.pop();
+  while (command.front() != ','){
+    positiveRateStr += command.pop();
+  }
+  positiveRate = positiveRateStr.toInt();
+
+  rate = (negativeRate << 16) + positiveRate;
+
+  QueueArray <uint8_t> rateData = intToBytes(rate, 4);
+  while (!rateData.isEmpty()){
+    rateBytes.push(rateData.pop());
+  }
+
+  // Sends the setup bytes
+  DDSsendData(limitsBytes, DEFAULT_SETTINGS);
+  DDSsendData(stepBytes, DEFAULT_SETTINGS);
+  DDSsendData(rateBytes, DEFAULT_SETTINGS);
+  DDSsendData(controlBytes, DEFAULT_SETTINGS);
+
   purge(command);
   return;
 }
+
 
 // I'm so happy that I could name a function this
 void DDSsendRamplitude(uint16_t amplitude){
@@ -474,26 +631,7 @@ void DDSsendRampFrequency(uint16_t frequency){
 }
 
 
-// Converts an integer to a stack of bytes
-QueueArray <uint8_t> intToBytes(uint_fast64_t integer, uint_fast8_t bufferSize){
-  uint_fast64_t data = integer;
-  QueueArray <uint8_t> bytesFlipped;
-  QueueArray <uint8_t> bytes;
 
-  //pushes to a queue of the length of the number of bytes in the buffer.
-  for(uint_fast8_t i = 0; i < bufferSize; i++){
-    bytesFlipped.push((uint8_t)data);
-    data = data >> 8;
-  }
-
-  // Treats the queue more as a stack for the data to maintain MSB first.
-  // Still using queue library over one for stacks for the sake of compatibility to other functions.
-  while(!bytesFlipped.isEmpty()){
-    bytes.push(bytesFlipped.pop());
-  }
-
-  return bytes;
-}
 
 
 // sends variable-sized byte sequence to the DDS
