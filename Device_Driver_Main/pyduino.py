@@ -166,9 +166,9 @@ for p in ports:
 try:
     com_port = COM_PORTS_LIST[0]
     serial_port = serial.Serial(port=com_port, baudrate=9600)
-except IndexError:
-    COMP_PORTS_LIST = ["No Device Detected"]
-    com_port = COM_PORTS_LIST[0]
+except (serial.SerialException, IndexError) as exception:
+    COMP_PORTS_LIST = ["No Device Available"]
+    serial_port = "none"
 
 
 ###################################################

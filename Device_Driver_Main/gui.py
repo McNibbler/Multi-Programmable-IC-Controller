@@ -132,10 +132,21 @@ class Application(QWidget):
         self.is_bipolar = True
         self.is_tied = False
 
-        controller.send_initialization(self.is_bipolar, self.gain)
-        controller.send_voltage(controller.DAC_2, 0, self.reference_voltage, self.gain, self.is_bipolar)
+        if controller.serial_port == "none":
+            box = QMessageBox()
+            box.setIcon(QMessageBox.Warning)
+            box.setText('No COM Ports Available')
+            box.setInformativeText('Plug in your device and try again.')
+            box.setStandardButtons(QMessageBox.Ok)
+            box.exec_()
 
-        self.main_window()
+            sys.exit()
+
+        else:
+            controller.send_initialization(self.is_bipolar, self.gain)
+            controller.send_voltage(controller.DAC_2, 0, self.reference_voltage, self.gain, self.is_bipolar)
+
+            self.main_window()
 
     # Main window execution and layout
     def main_window(self):
