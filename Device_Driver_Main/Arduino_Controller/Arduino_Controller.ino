@@ -402,7 +402,7 @@ void DDSoutputHandler(QueueArray <uint8_t> &command){
 
   // Creates a single constant wave of one frequency, amplitude, and phase
   if (front = DDS_SINGLE_TONE){
-    DDSsingleToneWord(command);
+    DDSsingleTone(command);
     purge(command);
     return;
   }
@@ -450,40 +450,6 @@ void DDSoutputHandler(QueueArray <uint8_t> &command){
   
 }
 
-void DDSsingleToneWord(QueueArray <uint8_t> &command){
-
-  uint32_t params [3];
-  String paramsStr [3];
-  uint64_t singleToneWord;
-  
-  for (uint_fast8_t i = 0; i < 3; i++){
-    while(command.front() != ','){
-      paramsStr[i] += command.pop();
-    }
-    params[i] = paramsStr[i].toInt();
-    command.pop();
-  }
-
-  singleToneWord += params[0] << 48;    // Amplitude Scale Factor
-  singleToneWord += params[1] << 32;    // Phase Offset Word
-  singleToneWord += params[2];          // Frequency Tuning Word
-
-  QueueArray <uint8_t> singleToneBytes;
-  singleToneBytes.push(DDS_PROFILE_0_BIN);  // Single Tone Register
-
-  QueueArray <uint8_t> data = intToBytes(singleToneWord);
-  while (!data.isEmpty()){
-    singleToneBytes.push(data.pop());
-  }
-
-  // Sends the Data
-  DDSsendData(singleToneBytes);
-  purge(command);
-  return; 
-
-}
-
-
 // Converts an integer to a stack of bytes
 QueueArray <uint8_t> intToBytes(uint_fast64_t integer, uint_fast8_t bufferSize){
   uint_fast64_t data = integer;
@@ -505,6 +471,40 @@ QueueArray <uint8_t> intToBytes(uint_fast64_t integer, uint_fast8_t bufferSize){
   return bytes;
 }
 
+
+// Sends a single tone
+void DDSsingleTone(QueueArray <uint8_t> &command){
+
+  uint32_t params [3];
+  String paramsStr [3];
+  uint64_t singleToneWord;
+  
+  for (uint_fast8_t i = 0; i < 3; i++){
+    while(command.front() != ','){
+      paramsStr[i] += command.pop();
+    }
+    params[i] = paramsStr[i].toInt();
+    command.pop();
+  }
+
+  singleToneWord += params[0] << 48;    // Amplitude Scale Factor
+  singleToneWord += params[1] << 32;    // Phase Offset Word
+  singleToneWord += params[2];          // Frequency Tuning Word
+
+  QueueArray <uint8_t> singleToneBytes;
+  singleToneBytes.push(DDS_PROFILE_0_BIN);  // Single Tone Register
+
+  QueueArray <uint8_t> data = intToBytes(singleToneWord, 8);
+  while (!data.isEmpty()){
+    singleToneBytes.push(data.pop());
+  }
+
+  // Sends the Data
+  DDSsendData(singleToneBytes, DEFAULT_SETTINGS);
+  purge(command);
+  return; 
+
+}
 
 
 // Parses the rest of the command for the setup for the DRG
