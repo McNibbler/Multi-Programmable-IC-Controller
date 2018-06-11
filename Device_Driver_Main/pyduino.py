@@ -163,9 +163,12 @@ COM_PORTS_LIST = []
 for p in ports:
     COM_PORTS_LIST.append(p.device)
 
-com_port = COM_PORTS_LIST[0]
-
-serial_port = serial.Serial(port=com_port, baudrate=9600)
+try:
+    com_port = COM_PORTS_LIST[0]
+    serial_port = serial.Serial(port=com_port, baudrate=9600)
+except IndexError:
+    COMP_PORTS_LIST = ["No Device Detected"]
+    com_port = COM_PORTS_LIST[0]
 
 
 ###################################################
