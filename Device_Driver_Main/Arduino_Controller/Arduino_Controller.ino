@@ -78,6 +78,12 @@ using namespace std;
 // Pins
 const uint_fast8_t SS_DDS = 9;
 const uint_fast8_t SS_DAC = 10;
+
+const uint_fast8_t DDS_IO_UPDATE_PIN = 4;
+const uint_fast8_t DDS_PROFILE_PIN_0 = 5;
+const uint_fast8_t DDS_PROFILE_PIN_1 = 6;
+const uint_fast8_t DDS_PROFILE_PIN_2 = 7;
+
 // const uint_fast8_t LDAC = 8;
 // SDI = 11;
 // SDO = 12;
@@ -249,6 +255,16 @@ void setup() {
   digitalWrite(SS_DDS, HIGH);
   digitalWrite(SS_DAC, HIGH);
 
+  // Sets the profile to 0
+  pinMode(DDS_IO_UPDATE_PIN, OUTPUT);
+  pinMode(DDS_PROFILE_PIN_0, OUTPUT);
+  pinMode(DDS_PROFILE_PIN_1, OUTPUT);
+  pinMode(DDS_PROFILE_PIN_2, OUTPUT);
+  digitalWrite(DDS_IO_UPDATE_PIN, LOW);
+  digitalWrite(DDS_PROFILE_PIN_0, LOW);
+  digitalWrite(DDS_PROFILE_PIN_1, LOW);
+  digitalWrite(DDS_PROFILE_PIN_2, LOW);
+
   // Sets LDAC to low because synchronous updating isn't important for this
   // pinMode(LDAC, OUTPUT);
   // digitalWrite(LDAC, LOW);
@@ -374,6 +390,7 @@ void DDScontrolHandler(QueueArray <uint8_t> &command){
 }
 
 // Sets the parameters (I HAVE TO MAKE THIS FUNCTION BEFORE DDSoutputHandler(); because it braeaks when using vectors for... some reason?)
+//  Actually for some reason I have to put any function that returns some sort of object first, but primative data types are okay after for... reasons?
 vector <uint64_t> DDSrampParameters(QueueArray <uint8_t> &command){
   
   vector <String> paramStr;
@@ -449,6 +466,39 @@ void DDSoutputHandler(QueueArray <uint8_t> &command){
   }
   
 }
+
+// Updataes to one of the already programmed profile registers
+void DDSprofileUpdate (uint8_t profile){
+  digitalWrite(DDS_IO_UPDATE_PIN, HIGH);
+
+  uint8_t bitBoi1 = profile >> 2;
+  if (bitBoi1 == 1){
+    digitalWrite(DDS_PROFILE_PIN_2, HIGH);
+  }
+  else{
+    digitalWrite(DDS_PROFILE_PIN_2, LOW);
+  }
+
+  uint8_t bitBoi2 = (profile >> 1) - bitBoi1;
+  if (bitBoi2 == 1){
+    digitalWrite(DDS_PROFILE_PIN_1, HIGH);
+  }
+  else{
+    digitalWrite(DDS_PROFILE_PIN_1, LOW);
+  }
+
+  uint8_t bitBoi3 = profile - bitBoi1 - bitBoi2;
+  if (bitBoi3 == 1){
+    digitalWrite(DDS_PROFILE_PIN_0, HIGH);
+  }
+  else{
+    digitalWrite(DDS_PROFILE_PIN_0, LOW);
+  }
+
+  digitalWrite(DDS_IO_UPDATE_PIN, LOW);
+
+}
+
 
 // Converts an integer to a stack of bytes
 QueueArray <uint8_t> intToBytes(uint_fast64_t integer, uint_fast8_t bufferSize){
