@@ -402,6 +402,7 @@ void DDSoutputHandler(QueueArray <uint8_t> &command){
 
   // Creates a single constant wave of one frequency, amplitude, and phase
   if (front = DDS_SINGLE_TONE){
+    DDSsingleToneWord(command);
     purge(command);
     return;
   }
@@ -449,7 +450,38 @@ void DDSoutputHandler(QueueArray <uint8_t> &command){
   
 }
 
+void DDSsingleToneWord(QueueArray <uint8_t> &command){
 
+  uint32_t params [3];
+  String paramsStr [3];
+  uint64_t singleToneWord;
+  
+  for (uint_fast8_t i = 0; i < 3; i++){
+    while(command.front() != ','){
+      paramsStr[i] += command.pop();
+    }
+    params[i] = paramsStr[i].toInt();
+    command.pop();
+  }
+
+  singleToneWord += params[0] << 48;    // Amplitude Scale Factor
+  singleToneWord += params[1] << 32;    // Phase Offset Word
+  singleToneWord += params[2];          // Frequency Tuning Word
+
+  QueueArray <uint8_t> singleToneBytes;
+  singleToneBytes.push(DDS_PROFILE_0_BIN);  // Single Tone Register
+
+  QueueArray <uint8_t> data = intToBytes(singleToneWord);
+  while (!data.isEmpty()){
+    singleToneBytes.push(data.pop());
+  }
+
+  // Sends the Data
+  DDSsendData(singleToneBytes);
+  purge(command);
+  return; 
+
+}
 
 
 // Converts an integer to a stack of bytes
@@ -495,7 +527,7 @@ void DDSrampSetup(QueueArray <uint8_t> &command){
 
   // See table 11 in data sheet for digital ramp destinations
   if (front == DDS_FREQUENCY){
-    nextByte += 0 << 4;       
+    nextByte += 0 << 4;
   }
   else if (front == DDS_PHASE){
     nextByte += 1 << 4;
@@ -613,6 +645,9 @@ void DDSsendRamplitude(uint16_t amplitude){
   if (amplitude == NULL){
     return;
   }
+
+
+
   return;
 }
 
