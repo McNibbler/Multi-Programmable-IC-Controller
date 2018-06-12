@@ -41,12 +41,12 @@ from pyduino import *
 
 # Sends a voltage command
 def send_voltage(address: chr, desired_voltage: float, reference_voltage: float, gain: float, bipolar: bool):
-    send_command(make_voltage_command(address, desired_voltage, reference_voltage, gain, bipolar))
+    send_command(DAC.make_voltage_command(address, desired_voltage, reference_voltage, gain, bipolar))
 
 
 # Sends a setup command
 def send_initialization(is_bipolar: bool, gain: str):
-    pyduino.send_initialization(is_bipolar, gain)
+    pyduino.DAC.send_initialization(is_bipolar, gain)
 
 
 # Use to set the COM Port being used

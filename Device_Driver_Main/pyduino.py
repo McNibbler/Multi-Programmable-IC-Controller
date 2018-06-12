@@ -76,7 +76,6 @@
 
 import serial.tools.list_ports
 
-
 ###################################################
 
 ##############################
@@ -103,19 +102,35 @@ DONE = '!'
 ################
 
 # What type of programming to the DDS to preform
-DDS_CONTROL = 'C'                       # Control function registers
+DDS_CONTROL = 'C'  # Control function registers
 DDS_CONTROL_MODES = ['1', '2', '3']
-DDS_OUTPUT = 'o'                        # Signifies programming some sort of output
+
+DDS_READ = 'r'  # Not really used yet but who knows?
+DDS_WRITE = 'w'
+
+DDS_OUTPUT = 'o'  # Signifies programming some sort of output
 
 # Four modes of operation
 DDS_SINGLE_TONE = 's'
-DDS_RAM = 'R'
+
 DDS_RAMP = 'r'
 DDS_RAMP_SETUP = 's'
+DDS_FREQUENCY = 'f'
+DDS_PHASE = 'p'
+DDS_AMPLITUDE = 'a'
+DDS_RAMP_DISABLE = 'x'
+DDS_RAMP_PARAMETERS = 'p'
+
+DDS_RAM = 'R'
+
 DDS_PARALLEL = 'p'
+
+# Command to load values stored in the buffer into the active registers
+DDS_LOAD = 'l'
 
 # Single Tone / RAM profiles
 DDS_PROFILES = ['0', '1', '2', '3', '4', '5', '6', '7']
+
 
 #################
 # PMIC COMMANDS #
@@ -150,7 +165,6 @@ DAC_GAIN_432 = '3'
 DAC_BITS = 14
 DAC_MAX_BITS = 16
 
-
 ###################################################
 
 ################
@@ -177,51 +191,96 @@ except (serial.SerialException, IndexError) as exception:
 # LIBRARY FUNCTIONS #
 #####################
 
-# Returns a formatted string command that can be sent
-def make_voltage_command(address: chr, desired_voltage: float,
-                         reference_voltage: float, gain: float, bipolar: bool) -> str:
+#################
+# DDS FUNCTIONS #
+#################
 
-    instructions = str(DAC_INDICATOR + DAC_WRITE + address)
+# Functions for communicating to the DDS
+class DDS:
 
-    data = str(calculate_bits(desired_voltage, reference_voltage, gain, bipolar))
+    def __init__(self):
+        pass
 
-    command = str(instructions + data + DONE)
+    @staticmethod
+    # Sends the command to signify that the data in the registers needs to be loaded
+    def load():
+        load_command = str(DDS_INDICATOR + DDS_LOAD + DONE)
+        send_command(load_command)
 
-    return command
+    @staticmethod
+    def create_parameters_string(amplitude, ref_amplitude, phase, frequency):
+        amp = str(DDS.calculate_amplitude_binary(amplitude, ref_amplitude))
+        phs = str(DDS.calculate_phase_binary(phase))
+        freq = str(DDS.calculate_frequency_binary(frequency))
+        return str(amp + ',' + phs + ',' + freq)
+
+    # Commands for calculating the binary integer equivalents for sending to the registers
+    @staticmethod
+    def calculate_amplitude_binary(amplitude, ref_amplitude):
+        pass
+
+    @staticmethod
+    def calculate_phase_binary(phase):
+        pass
+
+    @staticmethod
+    def calculate_frequency_binary(frequency):
+        pass
 
 
-# Calculates the integer for the DAC to use
-def calculate_bits(desired_voltage: float, reference_voltage: float, gain: float, bipolar: bool) -> int:
+#################
+# DAC FUNCTIONS #
+#################
 
-    if bipolar:
-        fraction = (desired_voltage + gain * reference_voltage) / (2 * reference_voltage) / gain
-    else:
-        fraction = (desired_voltage / reference_voltage) / gain
+# Really only putting these into their own classes to decouple the devices
+class DAC:
 
-    # Bitwise operators in python are a goddamn sin i just want my fixed variable sizes why is that a problem smh
-    data = int(fraction * (1 << DAC_BITS)) * (1 << (DAC_MAX_BITS - DAC_BITS))
+    def __init__(self):
+        pass
 
-    return data
+    @staticmethod
+    # Returns a formatted string command that can be sent
+    def make_voltage_command(address: chr, desired_voltage: float,
+                             reference_voltage: float, gain: float, bipolar: bool) -> str:
+        instructions = str(DAC_INDICATOR + DAC_WRITE + address)
 
+        data = str(DAC.calculate_bits(desired_voltage, reference_voltage, gain, bipolar))
 
-# Sends a setup command
-def send_initialization(is_bipolar: bool, gain: str):
+        command = str(instructions + data + DONE)
 
-    # Finite state machine for polarity and gain
-    if is_bipolar:
-        polarity = DAC_BIPOLAR
-    else:
-        polarity = DAC_UNIPOLAR
+        return command
 
-    if str(gain) == '2.0':
-        gain = DAC_GAIN_2
-    elif str(gain) == '4.0':
-        gain = DAC_GAIN_4
-    elif str(gain) == '4.32':
-        gain = DAC_GAIN_432
+    @staticmethod
+    # Calculates the integer for the DAC to use
+    def calculate_bits(desired_voltage: float, reference_voltage: float, gain: float, bipolar: bool) -> int:
+        if bipolar:
+            fraction = (desired_voltage + gain * reference_voltage) / (2 * reference_voltage) / gain
+        else:
+            fraction = (desired_voltage / reference_voltage) / gain
 
-    command = str(DAC_INDICATOR + DAC_START + polarity + gain + DONE)
-    send_command(command)
+        # Bitwise operators in python are a goddamn sin i just want my fixed variable sizes why is that a problem smh
+        data = int(fraction * (1 << DAC_BITS)) * (1 << (DAC_MAX_BITS - DAC_BITS))
+
+        return data
+
+    @staticmethod
+    # Sends a setup command
+    def send_initialization(is_bipolar: bool, gain: str):
+        # Finite state machine for polarity and gain
+        if is_bipolar:
+            polarity = DAC_BIPOLAR
+        else:
+            polarity = DAC_UNIPOLAR
+
+        if str(gain) == '2.0':
+            gain = DAC_GAIN_2
+        elif str(gain) == '4.0':
+            gain = DAC_GAIN_4
+        elif str(gain) == '4.32':
+            gain = DAC_GAIN_432
+
+        command = str(DAC_INDICATOR + DAC_START + polarity + gain + DONE)
+        send_command(command)
 
 
 ###################################################
@@ -244,6 +303,4 @@ def send_command(command: str):
 
 # Testing stuff that doesn't normally get run cus it's a library
 if __name__ == '__main__':
-
     pass
-
