@@ -62,9 +62,11 @@
 #include <SPI.h>                // SPI communication for the DAC
 #include <math.h>               // Math library
 #include <stdint.h>             // So I can use nice data structures
-#include <StandardCplusplus.h>  // Praise the lord that someone actually ported the C++ STL to Arduino
-#include <vector>               // Because traditional arrays are a pain and I only mess with that object oriented life
 #include <QueueArray.h>         // Library for creating command sequences
+
+// NO LONGER USED?
+// #include <StandardCplusplus.h>        // Praise the lord that someone actually ported the C++ STL to Arduino
+// #include <vector>                     // Because traditional arrays are a pain and I only mess with that object oriented life
 
 using namespace std;
 
@@ -128,8 +130,8 @@ const uint8_t DONE = '!';
   const uint8_t DDS_SINGLE_TONE = 's';
   const uint8_t DDS_RAMP = 'r';
     const uint8_t DDS_RAMP_SETUP = 's';
-      const uint8_t DDS_RAMP_REGISTERS_BIN  [3] = {11, 12, 13};
-    const uint8_t DDS_RAMP_PARAMETERS = 'p';
+    const uint8_t DDS_RAMP_DISABLE = 'x';
+    const uint8_t DDS_RAMP_PARAMETERS = 'p';  // Effectively the same as using single tone at this point in time?
   const uint8_t DDS_RAM = 'R';
   const uint8_t DDS_PARALLEL = 'p';
 
@@ -389,30 +391,6 @@ void DDScontrolHandler(QueueArray <uint8_t> &command){
   return;
 }
 
-// Sets the parameters (I HAVE TO MAKE THIS FUNCTION BEFORE DDSoutputHandler(); because it braeaks when using vectors for... some reason?)
-//  Actually for some reason I have to put any function that returns some sort of object first, but primative data types are okay after for... reasons?
-vector <uint64_t> DDSrampParameters(QueueArray <uint8_t> &command){
-  
-  vector <String> paramStr;
-
-  vector <uint64_t> parameters = {NULL, NULL, NULL};
-
-  for (uint8_t i = 0; i < parameters.size(); i++){
-
-    while (command.front() != ','){
-      paramStr[i] += (char)command.pop();
-    }
-    
-    if (paramStr[i] != 'x'){
-      parameters[i] = paramStr[i].toInt();
-    }
-
-    command.pop();
-  }
-
-  return parameters;
-}
-
 // handles the different output possibilities
 void DDSoutputHandler(QueueArray <uint8_t> &command){
   uint8_t front = command.pop();
@@ -428,22 +406,27 @@ void DDSoutputHandler(QueueArray <uint8_t> &command){
   else if (front = DDS_RAMP){
 
     uint8_t newFront = command.pop();
-    
+
+    // Sets up the control of the DRG
     if (newFront == DDS_RAMP_SETUP){
       DDSrampSetup(command);
       purge(command);
       return;
     }
 
+    // Disables the DRG if desired to switch back to single tone mode
+    else if (newFront == DDS_RAMP_DISABLE){
+      DDSrampDisable();
+      purge(command);
+      return;
+    }
+
+    // Sets the other parameters of the DRG by creating a single tone profile
     else if (newFront == DDS_RAMP_PARAMETERS){
       
-      vector <uint64_t> parameters = {NULL, NULL, NULL};
-      parameters = DDSrampParameters(command);
-
-      DDSsendRamplitude(parameters[0]);
-      DDSsendRampPhase(parameters[1]);
-      DDSsendRampFrequency(parameters[2]);
-
+      // As the single tone profile register is lower in priority than the DRG in frequency, phase, and amplitude (Table 5 in datasheet),
+      //  I can just set a profile with the other parameters and the ramp will override with the one that I actually want, I think?
+      DDSsingleTone(command);
       purge(command);
       return;
       
@@ -556,6 +539,22 @@ void DDSsingleTone(QueueArray <uint8_t> &command){
 
 }
 
+// Disables the DRG by setting control back to defaults
+void DDSrampDisable(){
+
+  QueueArray <uint8_t> controlBytes;
+  controlBytes.push(DDS_CFR2_BIN);
+
+  // Sets all control values to default
+  controlBytes.push(0x00);
+  controlBytes.push(0x40);
+  controlBytes.push(0x08);
+  controlBytes.push(0x20);
+
+  DDSsendData(controlBytes, DEFAULT_SETTINGS);
+
+}
+
 
 // Parses the rest of the command for the setup for the DRG
 void DDSrampSetup(QueueArray <uint8_t> &command){
@@ -569,7 +568,7 @@ void DDSrampSetup(QueueArray <uint8_t> &command){
   controlBytes.push(DDS_CFR2_BIN);
 
   // Default first byte. 7 reserved open bits and amplitude scaler bypassed
-  controlBytes.push((uint8_t)0);
+  controlBytes.push(0x00);
 
   uint8_t nextByte;
   nextByte = 1 << 6; // SYNC_CLK Enable (Default)
@@ -688,35 +687,6 @@ void DDSrampSetup(QueueArray <uint8_t> &command){
   purge(command);
   return;
 }
-
-
-// I'm so happy that I could name a function this
-void DDSsendRamplitude(uint16_t amplitude){
-  if (amplitude == NULL){
-    return;
-  }
-
-
-
-  return;
-}
-
-void DDSsendRampPhase(uint16_t phase){
-  if (phase == NULL){
-    return;
-  }
-  return;
-}
-
-void DDSsendRampFrequency(uint16_t frequency){
-  if (frequency == NULL){
-    return;
-  }
-  return;
-}
-
-
-
 
 
 // sends variable-sized byte sequence to the DDS
