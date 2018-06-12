@@ -119,8 +119,11 @@ const uint8_t DONE = '!';
 //////////////////
 // DDS COMMANDS //
 //////////////////
+// DDS = AD9910
+// http://www.analog.com/media/en/technical-documentation/data-sheets/AD9910.pdf
 
   // when u yeet so hard u get yote
+  // I don't think I actually end up using this
   const uint8_t DDS_READ = 'r';
   const uint8_t DDS_WRITE = 'w';
   const uint8_t DDS_READ_BIN = 1;
@@ -141,6 +144,9 @@ const uint8_t DONE = '!';
   const uint8_t DDS_CONTROL_MODES_BIN [3] = {0, 1, 2};
   const uint8_t DDS_OUTPUT = 'o';                         // Signifies programming some sort of output
 
+  // Command to load the values stored in the buffer into the active registers
+  const uint8_t DDS_LOAD = 'l';
+
   // Single tone / RAM profiles
   const uint8_t DDS_PROFILES [8] = {'0', '1', '3', '4', '5', '6', '7'};
   const uint8_t DDS_PROFILES_BIN [8] = {14, 15, 16, 17, 18, 19, 20, 21};
@@ -150,6 +156,8 @@ const uint8_t DONE = '!';
   const uint8_t DDS_AMPLITUDE = 'a';
 
   // REGISTER MAP
+  //  These also function as the instruction bytes, assuming one desires to write to the registers.
+  //  If readback is desired, add the write bit as the MSB, so add (DDS_WRITE_BIN << 7) to the register to read back.
   const uint8_t DDS_CFR1_BIN = 0x00;
   const uint8_t DDS_CFR2_BIN = 0x01;
   const uint8_t DDS_CFR3_BIN = 0x02;
@@ -257,7 +265,7 @@ void setup() {
   digitalWrite(SS_DDS, HIGH);
   digitalWrite(SS_DAC, HIGH);
 
-  // Sets the profile to 0
+  // Sets the profile to 0 and sets the load buffer pin to low
   pinMode(DDS_IO_UPDATE_PIN, OUTPUT);
   pinMode(DDS_PROFILE_PIN_0, OUTPUT);
   pinMode(DDS_PROFILE_PIN_1, OUTPUT);
@@ -312,25 +320,28 @@ void loop() {
 void executeCommand(QueueArray <uint8_t> &command){
 
   // Expandable so that I could potentially run different execution commands for other devices?
-  // PMIC monitoring system may be added.
+  // PMIC monitoring system will be added.
   if (command.front() == DAC_INDICATOR){
     command.pop();
     DACcommand(command);
     purge(command);
     return;
   }
+  // To be implemented
   else if (command.front() == PMIC_INDICATOR){
     command.pop();
     PMICcommand(command);
     purge(command);
     return;
   }
+  // Access the DDS and control it
   else if (command.front() == DDS_INDICATOR){
     command.pop();
     DDScommand(command);
     purge(command);
     return;
   }
+  // Catch invalid commands
   else{
     purge(command);
     return;
@@ -362,6 +373,11 @@ void DDScommand(QueueArray <uint8_t> &command){
     purge(command);
     return;
   }
+  else if (front == DDS_LOAD){
+    DDSloadBuffer();
+    purge(command);
+    return;
+  }
   else{
     purge(command);
     return;
@@ -369,6 +385,20 @@ void DDScommand(QueueArray <uint8_t> &command){
 
 }
 
+
+// Loads the data from the buffers into the active registers
+//  Timing here is arbitrary, but follow figure 49 for appropriate timing and the minimum number of cycles on SYNC_CLK to ensure that it will load properly.
+//  The Arduino is much, much slower than the SYNC_CLK and this timing is arbitrary and slow, but fast enough to be undetectable on the human scale, Which
+//  is what this is being used for currently.
+void DDSlaodBuffer(){
+
+  digitalWrite(DDS_IO_UPDATE_PIN, HIGH);
+  delay(5);
+  digitalWrite(DDS_IO_UPDATE_PIN, LOW);
+
+}
+
+// Handler for the control registers so that different parameters can be changed individually
 // lol idfk yet bear with me
 void DDScontrolHandler(QueueArray <uint8_t> &command){
   uint8_t front = command.pop();
@@ -452,7 +482,6 @@ void DDSoutputHandler(QueueArray <uint8_t> &command){
 
 // Updataes to one of the already programmed profile registers
 void DDSprofileUpdate (uint8_t profile){
-  digitalWrite(DDS_IO_UPDATE_PIN, HIGH);
 
   uint8_t bitBoi1 = profile >> 2;
   if (bitBoi1 == 1){
@@ -477,8 +506,6 @@ void DDSprofileUpdate (uint8_t profile){
   else{
     digitalWrite(DDS_PROFILE_PIN_0, LOW);
   }
-
-  digitalWrite(DDS_IO_UPDATE_PIN, LOW);
 
 }
 
