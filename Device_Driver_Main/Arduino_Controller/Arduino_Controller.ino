@@ -1,59 +1,19 @@
-/* DAC Controller (GUI Interfaced Controller)
- * Version: Alpha 0.1
+/* GUI-Interfaced Multi-Programmable-IC Controller
+ * Version: Alpha 0.2
  * 
  * Thomas Kaunzinger
  * Xcerra Corp.
- * May 10, 2018
+ * June 12, 2018
  * 
- * This program is designed to select and output a desired voltage from an AD5722/AD5732/AD5752 DAC using SPI
- * http://www.analog.com/media/en/technical-documentation/data-sheets/AD5722_5732_5752.pdf
+ * This program is designed to interperate serial commands from a separate library following an expandable flowing-tree command structure
  * 
- * This version of the program has additional functionality from the standalone version to interface with a the
- * DAC using simple commands transferredc through the serial port of the Arduino
+ * The example devices supported now or to be supported are the following...
+ * DDS: http://www.analog.com/media/en/technical-documentation/data-sheets/AD9910.pdf
+ * PMIC: http://www.analog.com/media/en/technical-documentation/data-sheets/2977fc.pdf
+ * DAC: http://www.analog.com/media/en/technical-documentation/data-sheets/AD5722_5732_5752.pdf
  */
 
-///// NOTE: MUCH DOCUMENTATION IS COPIED OVER FROM THE STANDALONE VERSION INCLUDING THE SPECIFICS OF THE DAC /////
-
-//////////////////////////
-// OPERATION OF THE DAC //
-//////////////////////////
-
-/* Power-up sequence:
- *  Ideally, the DAC is to be powered up in the following order to ensure that the DAC registers are loaded with 0x0000:
- *    GND --> SIG_GND --> DAC GND   (I prefer shorting all supplies to the same ground)
- *    DVcc                          (Digital power must be applied BEFORE analog power)
- *    AVss and AVdd                 (Order does not matter for these, as long as they are after DVcc)
- *  
- * Communication:
- *  The DAC is capable of communication through SPI, QSPI, MICROWIRE, and DSP and is rated at 30MHz. Data input is done in
- *  24 bit registers with most significant bit first. This program uses SPI at 10kHz due to limitations of the Arduino.
- * 
- * LDAC:
- *  If this is held high, the DAC waits until the falling edge of LDAC to update all inputs simultaneously. If tied permanently
- *  low, data is updated individually.
- * 
- * CLR:
- *  When CLR is tied permanently low, code input is done through 2's compliment, and while it is tied permanently high, code is
- *  inputted through midscale binary (what this program uses).
- * 
- * First writes:
- *  The first communication to the DAC should be to set the output range on all channels by writing to the output range select
- *  register (default is 5V DAC_UNIPOLAR range).
- *  
- *  Furthermore, to program an output, it must first be powered up using the power control register, otherwise all code trying
- *  to access these is ignored.
- * 
- * Gain:
- *  Internal gain from the DAC is determined by the selected output range from the user.
- *    Range (V)   | Gain
- *    -------------------
- *    + 5         | 2
- *    + 10        | 4
- *    + 10.8      | 4.32
- *    +/- 5       | 4
- *    +/- 10      | 8
- *    +/- 10.8    | 8.64
- */
+///// NOTE: MUCH OF THE DOCUMENTATION NEEDS UPDATING SINCE THE PROJECT CHANGED SCOPE /////
 
 ///////////////
 // LIBRARIES //
@@ -225,29 +185,29 @@ const uint8_t DONE = '!';
   const uint8_t DAC_WRITE_BIN = 0;
   
   // Registers for controlling DAC
-  const uint8_t DAC_REGISTER_BIN = 0;      // 000
-  const uint8_t RANGE_REGISTER_BIN = 1;    // 001
-  const uint8_t POWER_REGISTER_BIN = 2;    // 010
-  const uint8_t CONTROL_REGISTER_BIN = 3;  // 011
+  const uint8_t DAC_REGISTER_BIN = 0;       // 000
+  const uint8_t RANGE_REGISTER_BIN = 1;     // 001
+  const uint8_t POWER_REGISTER_BIN = 2;     // 010
+  const uint8_t CONTROL_REGISTER_BIN = 3;   // 011
   
   // DAC channel addresses
-  const uint8_t DAC_A_BIN = 0;     // 000
-  const uint8_t DAC_B_BIN = 2;     // 010
-  const uint8_t DAC_2_BIN = 4;     // 100
+  const uint8_t DAC_A_BIN = 0;              // 000
+  const uint8_t DAC_B_BIN = 2;              // 010
+  const uint8_t DAC_2_BIN = 4;              // 100
   
   // Control channel addresses
-  const uint8_t NOP_BIN = 0;       // 000
-  const uint8_t TOGGLES_BIN = 1;   // 001
-  const uint8_t CLR_BIN = 4;       // 100
-  const uint8_t LOAD_BIN = 5;      // 101
+  const uint8_t NOP_BIN = 0;                // 000
+  const uint8_t TOGGLES_BIN = 1;            // 001
+  const uint8_t CLR_BIN = 4;                // 100
+  const uint8_t LOAD_BIN = 5;               // 101
   
   // Output range select register
-  const uint8_t DAC_UNI_5_BIN = 0;    // 000
-  const uint8_t DAC_UNI_10_BIN= 1;   // 001
-  const uint8_t DAC_UNI_108_BIN = 2;  // 010
-  const uint8_t DAC_BI_5_BIN = 3;     // 011
-  const uint8_t DAC_BI_10_BIN = 4;    // 100
-  const uint8_t DAC_BI_108_BIN = 5;   // 101
+  const uint8_t DAC_UNI_5_BIN = 0;          // 000
+  const uint8_t DAC_UNI_10_BIN= 1;          // 001
+  const uint8_t DAC_UNI_108_BIN = 2;        // 010
+  const uint8_t DAC_BI_5_BIN = 3;           // 011
+  const uint8_t DAC_BI_10_BIN = 4;          // 100
+  const uint8_t DAC_BI_108_BIN = 5;         // 101
 
 
 //////////////////////////////////////////////////////////////////////
@@ -353,6 +313,7 @@ void purge(QueueArray <uint8_t> &queue){
   while(!queue.isEmpty()) queue.pop();
 }
 
+/////////// DDS ///////////
 
 ///////////////////
 // DDS COMMANDS //
@@ -363,21 +324,25 @@ void DDScommand(QueueArray <uint8_t> &command){
 
   uint8_t front = command.pop();
 
+  // Access the control registers (I don't know what to do with this)
   if (front == DDS_CONTROL){
     DDScontrolHandler(command);
     purge(command);
     return;
   }
+  // Controls the outputs of the DDS
   else if (front == DDS_OUTPUT){
     DDSoutputHandler(command);
     purge(command);
     return;
   }
+  // Loads the data from the buffers into the active registers
   else if (front == DDS_LOAD){
     DDSloadBuffer();
     purge(command);
     return;
   }
+  // Catch invalid commands
   else{
     purge(command);
     return;
@@ -480,7 +445,7 @@ void DDSoutputHandler(QueueArray <uint8_t> &command){
   
 }
 
-// Updataes to one of the already programmed profile registers
+// Updataes to one of the already programmed profile registers (I don't know if I'll need to use this at all but it's nice to have the option)
 void DDSprofileUpdate (uint8_t profile){
 
   uint8_t bitBoi1 = profile >> 2;
@@ -737,6 +702,7 @@ uint8_t DDSinstructionConstruction(uint8_t rwBin, uint8_t registerValue){
   return byteBoi;
 }
 
+/////////// PMIC ///////////
 
 ///////////////////
 // PMIC COMMANDS //
@@ -749,6 +715,49 @@ void PMICcommand(QueueArray <uint8_t> &command){
   return;
 
 }
+
+/////////// DAC ///////////
+
+//////////////////////////
+// OPERATION OF THE DAC //
+//////////////////////////
+
+/* Power-up sequence:
+ *  Ideally, the DAC is to be powered up in the following order to ensure that the DAC registers are loaded with 0x0000:
+ *    GND --> SIG_GND --> DAC GND   (I prefer shorting all supplies to the same ground)
+ *    DVcc                          (Digital power must be applied BEFORE analog power)
+ *    AVss and AVdd                 (Order does not matter for these, as long as they are after DVcc)
+ *  
+ * Communication:
+ *  The DAC is capable of communication through SPI, QSPI, MICROWIRE, and DSP and is rated at 30MHz. Data input is done in
+ *  24 bit registers with most significant bit first. This program uses SPI at 10kHz due to limitations of the Arduino.
+ * 
+ * LDAC:
+ *  If this is held high, the DAC waits until the falling edge of LDAC to update all inputs simultaneously. If tied permanently
+ *  low, data is updated individually.
+ * 
+ * CLR:
+ *  When CLR is tied permanently low, code input is done through 2's compliment, and while it is tied permanently high, code is
+ *  inputted through midscale binary (what this program uses).
+ * 
+ * First writes:
+ *  The first communication to the DAC should be to set the output range on all channels by writing to the output range select
+ *  register (default is 5V DAC_UNIPOLAR range).
+ *  
+ *  Furthermore, to program an output, it must first be powered up using the power control register, otherwise all code trying
+ *  to access these is ignored.
+ * 
+ * Gain:
+ *  Internal gain from the DAC is determined by the selected output range from the user.
+ *    Range (V)   | Gain
+ *    -------------------
+ *    + 5         | 2
+ *    + 10        | 4
+ *    + 10.8      | 4.32
+ *    +/- 5       | 4
+ *    +/- 10      | 8
+ *    +/- 10.8    | 8.64
+ */
 
 
 //////////////////
