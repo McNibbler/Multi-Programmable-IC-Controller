@@ -15,7 +15,7 @@
 # sent easily over a serial connection and received by an Arduino or similar device to execute commands based
 # on the implementation of the interpretation on the Arduino side.
 #
-# Simply put, a command from this library starts with an initial ASCII character representing the device you wish to
+# Simply put, a command from this library starts with an initial ASCII cha6racter representing the device you wish to
 # communicate to. In this implementation, I have "D" at the front to signify that I'm talking to the DAC connected
 # to the arduino. Later on I plan to write some more to control a PMIC and DDS with this same system, so I may
 # use something like "P" to say I want to write to a PMIC. This is expandable to write command schemes for more
@@ -208,24 +208,36 @@ class DDS:
         send_command(load_command)
 
     @staticmethod
-    def create_parameters_string(amplitude, ref_amplitude, phase, frequency):
+    def create_parameters_string(amplitude, ref_amplitude, phase, frequency, freq_sysclk):
         amp = str(DDS.calculate_amplitude_binary(amplitude, ref_amplitude))
         phs = str(DDS.calculate_phase_binary(phase))
-        freq = str(DDS.calculate_frequency_binary(frequency))
+        freq = str(DDS.calculate_frequency_binary(frequency, freq_sysclk))
         return str(amp + ',' + phs + ',' + freq)
 
     # Commands for calculating the binary integer equivalents for sending to the registers
     @staticmethod
     def calculate_amplitude_binary(amplitude, ref_amplitude):
-        pass
+        amplitude_scale_factor = DDS.calculate_full_scale_binary(14, amplitude, ref_amplitude)
+        return amplitude_scale_factor
 
     @staticmethod
-    def calculate_phase_binary(phase):
-        pass
+    # Calculates the phase offset word
+    def calculate_phase_binary(degrees):
+        phase_offset_word = DDS.calculate_full_scale_binary(16, degrees, 360)
+        return phase_offset_word
 
     @staticmethod
-    def calculate_frequency_binary(frequency):
-        pass
+    def calculate_frequency_binary(frequency, freq_sysclk):
+        frequency_tuning_word = DDS.calculate_full_scale_binary(32, frequency, freq_sysclk)
+        return frequency_tuning_word
+
+    # I made an abstraction so prof Ben Lerner will be happy with me and I can say I'm using what I learned in fundies
+    @staticmethod
+    def calculate_full_scale_binary(num_of_bits, desired, full_scale):
+        bits = 1 << num_of_bits
+        fraction = desired / full_scale
+        word = int(fraction * bits)
+        return word
 
 
 #################
