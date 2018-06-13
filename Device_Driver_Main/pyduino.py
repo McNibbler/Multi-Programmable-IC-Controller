@@ -208,6 +208,37 @@ class DDS:
         send_command(load_command)
 
     @staticmethod
+    # Creates a command to disable the ramp functionality
+    def disable_ramp():
+        disable_command = str(DDS_INDICATOR + DDS_OUTPUT + DDS_RAMP + DDS_RAMP_DISABLE + DONE)
+        send_command(disable_command)
+
+    @staticmethod
+    def create_ramp_setup_command():
+        pass
+
+    @staticmethod
+    # literally just works the same as the single tone because I'm using the same method to take care of it, it's just
+    #   that the one parameter that you are ramping can be zero as it will get overridden by the ramp anyways
+    def create_ramp_parameters_command(amplitude, ref_amplitude, phase, frequency, freq_sysclk):
+        working_string = str(DDS_INDICATOR + DDS_OUTPUT + DDS_RAMP + DDS_RAMP_PARAMETERS)
+        parameters = DDS.create_parameters_string(amplitude, ref_amplitude, phase, frequency, freq_sysclk)
+        working_string = str(working_string + parameters)
+        working_string = str(working_string + DONE)
+        return working_string
+
+    @staticmethod
+    # Creates a string for a proper single tone command to send to the Arduino
+    def create_single_tone_command(amplitude, ref_amplitude, phase, frequency, freq_sysclk):
+        working_string = str(DDS_INDICATOR + DDS_OUTPUT + DDS_SINGLE_TONE)
+        parameters = DDS.create_parameters_string(amplitude, ref_amplitude, phase, frequency, freq_sysclk)
+        working_string = str(working_string + parameters)
+        working_string = str(working_string + DONE)
+        return working_string
+
+    @staticmethod
+    # Calculates the parameter words for setting amplitude, phase, and frequency, and then converts them to a usable
+    #   string to send in a command
     def create_parameters_string(amplitude, ref_amplitude, phase, frequency, freq_sysclk):
         amp = str(DDS.calculate_amplitude_binary(amplitude, ref_amplitude))
         phs = str(DDS.calculate_phase_binary(phase))

@@ -598,7 +598,8 @@ void DDSrampSetup(QueueArray <uint8_t> &command){
   uint32_t start;
   uint32_t finish;
   uint64_t limits;
-  
+
+  // I NEED TO BE MORE CAREFUL HERE BECAUSE A BAD COMMAND COULD BREAK THIS I THINK KIND OF FUNCTIONALITY
   while (command.front() != ','){
     startStr += command.pop();
   }
