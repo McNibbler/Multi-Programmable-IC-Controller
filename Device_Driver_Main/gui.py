@@ -287,10 +287,10 @@ class Application(QWidget):
 
         dds_frame.setFixedSize(300, 275)
 
-        dds_layout.addWidget(self.dds_title, 0, 0, 1, 3)
-        dds_layout.addWidget(self.drg_select_checkbox, 0, 3, 1, 1)
+        dds_layout.addWidget(self.dds_title, 0, 0, 1, 2)
+        dds_layout.addWidget(self.drg_select_checkbox, 0, 2, 1, 2)
 
-        dds_layout.addWidget(self.dds_frequency_label, 1, 0, 1, 4)
+        dds_layout.addWidget(self.dds_frequency_label, 1, 0, 1, 2)
 
         dds_layout.addWidget(self.dds_freq_sysclk_label, 2, 0, 1, 1)
         dds_layout.addWidget(self.dds_freq_sysclk_textbox, 2, 1, 1, 1)
@@ -299,14 +299,14 @@ class Application(QWidget):
 
         dds_layout.addWidget(self.dds_frequency_slider, 3, 0, 1, 4)
 
-        dds_layout.addWidget(self.dds_phase_label, 4, 0, 1, 4)
+        dds_layout.addWidget(self.dds_phase_label, 4, 0, 1, 2)
 
-        dds_layout.addWidget(self.dds_desire_phase_label, 5, 0, 1, 1)
-        dds_layout.addWidget(self.dds_phase_textbox, 5, 1, 1, 3)
+        dds_layout.addWidget(self.dds_desire_phase_label, 5, 2, 1, 1)
+        dds_layout.addWidget(self.dds_phase_textbox, 5, 3, 1, 1)
 
         dds_layout.addWidget(self.dds_phase_slider, 6, 0, 1, 4)
 
-        dds_layout.addWidget(self.dds_amplitude_label, 7, 0, 1, 4)
+        dds_layout.addWidget(self.dds_amplitude_label, 7, 0, 1, 2)
 
         dds_layout.addWidget(self.dds_amplitude_ref_label, 8, 0, 1, 1)
         dds_layout.addWidget(self.dds_amplitude_ref_textbox, 8, 1, 1, 1)
@@ -314,6 +314,8 @@ class Application(QWidget):
         dds_layout.addWidget(self.dds_amplitude_textbox, 8, 3, 1, 1)
 
         dds_layout.addWidget(self.dds_amplitude_slider, 9, 0, 1, 4)
+
+        dds_layout.addWidget(self.dds_load_button, 10, 0, 1, 4)
 
         # Adds the frames to the main window
         layout.addWidget(dds_frame, 0, 0, 1, 1)
