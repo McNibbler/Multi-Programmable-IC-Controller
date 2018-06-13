@@ -54,6 +54,21 @@ def disable_ramp():
     send_command(DDS.make_disable_ramp_command())
 
 
+# Sends a single tone setup command to the DDS
+def send_single_tone(amplitude: float, ref_amplitude: float, phase: float, frequency: float, freq_sysclk: float):
+    send_command(DDS.create_single_tone_command(amplitude, ref_amplitude, phase, frequency, freq_sysclk))
+
+
+# Sends the other parameters while in DRG mode (not the ramp setup parameters) (functionally same as send_single_tone())
+def send_ramp_parameters(amplitude: float, ref_amplitude: float, phase: float, frequency: float, freq_sysclk: float):
+    send_command(DDS.create_ramp_parameters_command(amplitude, ref_amplitude, phase, frequency, freq_sysclk))
+
+
+# Sends the command to set up the DRG for the desired parameter
+def send_ramp_setup(parameter: chr, start, stop, decrement, increment, rate_n, rate_p):
+    send_command(DDS.create_ramp_setup_command(parameter, start, stop, decrement, increment, rate_n, rate_p))
+
+
 #######
 # DAC #
 #######

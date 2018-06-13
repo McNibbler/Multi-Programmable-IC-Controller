@@ -214,8 +214,17 @@ class DDS:
         return disable_command
 
     @staticmethod
-    def create_ramp_setup_command():
-        pass
+    def create_ramp_setup_command(parameter: chr, start, stop, decrement, increment, rate_n, rate_p):
+        working_string = str(DDS_INDICATOR + DDS_OUTPUT + DDS_RAMP + DDS_RAMP_SETUP)
+        ramp_setup = DDS.create_ramp_setup_string(parameter, start, stop, decrement, increment, rate_n, rate_p)
+        working_string = str(working_string + ramp_setup)
+        working_string = str(working_string + DONE)
+        return working_string
+
+    @staticmethod
+    # Creates a string for the parameters of the DRG setup
+    def create_ramp_setup_string(parameter: chr, start, stop, decrement, increment, rate_n, rate_p):
+        return ''
 
     @staticmethod
     # literally just works the same as the single tone because I'm using the same method to take care of it, it's just
