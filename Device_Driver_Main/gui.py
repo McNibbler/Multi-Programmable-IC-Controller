@@ -39,6 +39,10 @@ class Application(QWidget):
         # DAC SIDE #
         ############
 
+        # Label for the DAC controller
+        self.dac_title = QLabel()
+        self.dac_title.setText('AD5732 DAC Controller')
+
         # Status text for the program
         self.status_text = QLabel()
         self.status_text.setText('Welcome!')
@@ -90,7 +94,7 @@ class Application(QWidget):
         self.com_select.activated[str].connect(self.change_com)
 
         # Voltage sliders
-        self.iterator = 1000000
+        self.iterator = 100000
         self.bipolar_range = range(int(-1*self.gain*self.reference_voltage*self.iterator),
                                    int(self.gain*self.reference_voltage*self.iterator), 1)
         self.unipolar_range = range(0, int(self.gain*self.reference_voltage*self.iterator), 1)
@@ -136,6 +140,10 @@ class Application(QWidget):
         # DDS SIDE #
         ############
 
+        # Label for the DAC controller
+        self.dds_title = QLabel()
+        self.dds_title.setText('AD9910 DDS Controller')
+
         # Load data to the dds
         self.dds_load_button = QPushButton('Load to DDS')
         self.dds_load_button.setToolTip('Update the DDS by loading all selected parameters to the device')
@@ -149,23 +157,27 @@ class Application(QWidget):
 
         # Single Tone Sliders
         self.dds_frequency_iterator = 5
-        self.dds_max_frequency = 1000000000
-        self.dds_frequency_range = range(0, int(self.dds_iterator*self.dds_max_frequency))
+        self.dds_max_frequency = 100000
+        self.dds_frequency_range = range(0, int(self.dds_frequency_iterator*self.dds_max_frequency))
 
         self.dds_frequency_label = QLabel()
         self.dds_frequency_label.setText('Frequency (Hz)')
         self.dds_frequency_slider = QSlider(Qt.Horizontal)
         self.dds_frequency_slider.setRange(min(self.dds_frequency_range), max(self.dds_frequency_range))
         self.dds_frequency_slider.valueChanged[int].connect(self.update_frequency_slider)
+        self.dds_desire_freq_label = QLabel()
+        self.dds_desire_freq_label.setText('Desired:')
         self.dds_frequency_textbox = QLineEdit()
         self.dds_frequency_textbox.setText(str(0.0))
         self.dds_frequency_textbox.returnPressed.connect(self.update_frequency_textbox)
+        self.dds_freq_sysclk_label = QLabel()
+        self.dds_freq_sysclk_label.setText('Sysclk:')
         self.dds_freq_sysclk_textbox = QLineEdit()
         self.dds_freq_sysclk_textbox.setToolTip('Sysclk reference frequency (Hz)')
         self.dds_freq_sysclk_textbox.setText(str(self.dds_max_frequency))
         self.dds_freq_sysclk_textbox.returnPressed.connect(self.update_freq_sysclk)
 
-        self.dds_phase_iterator = 10000000
+        self.dds_phase_iterator = 100000
         self.dds_max_phase = 360
         self.dds_phase_range = range(0, int(self.dds_phase_iterator*self.dds_max_phase))
 
@@ -174,11 +186,13 @@ class Application(QWidget):
         self.dds_phase_slider = QSlider(Qt.Horizontal)
         self.dds_phase_slider.setRange(min(self.dds_phase_range), max(self.dds_phase_range))
         self.dds_phase_slider.valueChanged[int].connect(self.update_phase_slider)
+        self.dds_desire_phase_label = QLabel()
+        self.dds_desire_phase_label.setText('Desired:')
         self.dds_phase_textbox = QLineEdit()
         self.dds_phase_textbox.setText(str(0.0))
         self.dds_phase_textbox.returnPressed.connect(self.update_phase_textbox)
 
-        self.dds_amp_iterator = 1000000
+        self.dds_amp_iterator = 100000
         self.dds_max_amplitude = 1
         self.dds_amplitude_range = range(0, int(self.dds_amp_iterator * self.dds_max_amplitude))
 
@@ -187,21 +201,24 @@ class Application(QWidget):
         self.dds_amplitude_slider = QSlider(Qt.Horizontal)
         self.dds_amplitude_slider.setRange(min(self.dds_amplitude_range), max(self.dds_amplitude_range))
         self.dds_amplitude_slider.valueChanged[int].connect(self.update_amplitude_slider)
+        self.dds_desire_amp_label = QLabel()
+        self.dds_desire_amp_label.setText('Desired:')
         self.dds_amplitude_textbox = QLineEdit()
         self.dds_amplitude_textbox.setText(str(0.0))
         self.dds_amplitude_textbox.returnPressed.connect(self.update_amplitude_textbox)
+        self.dds_amplitude_ref_label = QLabel()
+        self.dds_amplitude_ref_label.setText('Reference:')
         self.dds_amplitude_ref_textbox = QLineEdit()
         self.dds_amplitude_ref_textbox.setToolTip('Max Reference Voltage (V)')
         self.dds_amplitude_ref_textbox.setText(str(self.dds_max_amplitude))
         self.dds_amplitude_ref_textbox.returnPressed.connect(self.update_amplitude_ref)
-
 
         #############
         # EXECUTION #
         #############
 
         # Window dimensions
-        self.WINDOW_SIZE = (325, 250)
+        self.WINDOW_SIZE = (620, 300)
         self.setFixedSize(self.WINDOW_SIZE[0], self.WINDOW_SIZE[1])
         self.setWindowTitle('Device Controller')
 
@@ -227,34 +244,112 @@ class Application(QWidget):
         layout = QGridLayout()
         self.setLayout(layout)
 
-        layout.addWidget(self.status_text, 0, 0, 1, 1)
-        layout.addWidget(self.com_select, 0, 1, 1, 1)
-        layout.addWidget(self.bipolar_checkbox, 0, 2, 1, 1)
-        layout.addWidget(self.connect_sliders_checkbox, 0, 3, 1, 1)
+        # Creates the DAC controller frame part of the GUI
+        dac_frame = QFrame()
+        dac_layout = QGridLayout()
+        dac_frame.setLayout(dac_layout)
 
-        layout.addWidget(self.reference_label, 1, 0, 1, 1)
-        layout.addWidget(self.reference_textbox, 1, 1, 1, 1)
-        layout.addWidget(self.gain_label, 1, 2, 1, 1)
-        layout.addWidget(self.gain_select, 1, 3, 1, 1)
+        dac_frame.setFixedSize(300, 275)
 
-        layout.addWidget(self.setup_button, 2, 0, 1, 4)
+        dac_layout.addWidget(self.dac_title, 0, 0, 1, 3)
 
-        layout.addWidget(self.voltage_label_a, 3, 0, 1, 3)
-        layout.addWidget(self.voltage_textbox_a, 3, 3, 1, 1)
+        dac_layout.addWidget(self.status_text, 1, 0, 1, 1)
+        dac_layout.addWidget(self.com_select, 1, 1, 1, 1)
+        dac_layout.addWidget(self.bipolar_checkbox, 1, 2, 1, 1)
+        dac_layout.addWidget(self.connect_sliders_checkbox, 1, 3, 1, 1)
 
-        layout.addWidget(self.voltage_slider_a, 4, 0, 1, 4)
+        dac_layout.addWidget(self.reference_label, 2, 0, 1, 1)
+        dac_layout.addWidget(self.reference_textbox, 2, 1, 1, 1)
+        dac_layout.addWidget(self.gain_label, 2, 2, 1, 1)
+        dac_layout.addWidget(self.gain_select, 2, 3, 1, 1)
 
-        layout.addWidget(self.voltage_label_b, 5, 0, 1, 3)
-        layout.addWidget(self.voltage_textbox_b, 5, 3, 1, 1)
+        dac_layout.addWidget(self.setup_button, 3, 0, 1, 4)
 
-        layout.addWidget(self.voltage_slider_b, 6, 0, 1, 4)
+        dac_layout.addWidget(self.voltage_label_a, 4, 0, 1, 3)
+        dac_layout.addWidget(self.voltage_textbox_a, 4, 3, 1, 1)
 
-        layout.addWidget(self.readback_label, 7, 0, 1, 4)
+        dac_layout.addWidget(self.voltage_slider_a, 5, 0, 1, 4)
 
-        layout.addWidget(self.readback_a, 8, 0, 1, 2)
-        layout.addWidget(self.readback_b, 8, 3, 1, 2)
+        dac_layout.addWidget(self.voltage_label_b, 6, 0, 1, 3)
+        dac_layout.addWidget(self.voltage_textbox_b, 6, 3, 1, 1)
+
+        dac_layout.addWidget(self.voltage_slider_b, 7, 0, 1, 4)
+
+        dac_layout.addWidget(self.readback_label, 8, 0, 1, 4)
+
+        dac_layout.addWidget(self.readback_a, 9, 0, 1, 2)
+        dac_layout.addWidget(self.readback_b, 9, 3, 1, 2)
+
+        # Creates the DDS controller frame part of the GUI
+        dds_frame = QFrame()
+        dds_layout = QGridLayout()
+        dds_frame.setLayout(dds_layout)
+
+        dds_frame.setFixedSize(300, 275)
+
+        dds_layout.addWidget(self.dds_title, 0, 0, 1, 3)
+        dds_layout.addWidget(self.drg_select_checkbox, 0, 3, 1, 1)
+
+        dds_layout.addWidget(self.dds_frequency_label, 1, 0, 1, 4)
+
+        dds_layout.addWidget(self.dds_freq_sysclk_label, 2, 0, 1, 1)
+        dds_layout.addWidget(self.dds_freq_sysclk_textbox, 2, 1, 1, 1)
+        dds_layout.addWidget(self.dds_desire_freq_label, 2, 2, 1, 1)
+        dds_layout.addWidget(self.dds_frequency_textbox, 2, 3, 1, 1)
+
+        dds_layout.addWidget(self.dds_frequency_slider, 3, 0, 1, 4)
+
+        dds_layout.addWidget(self.dds_phase_label, 4, 0, 1, 4)
+
+        dds_layout.addWidget(self.dds_desire_phase_label, 5, 0, 1, 1)
+        dds_layout.addWidget(self.dds_phase_textbox, 5, 1, 1, 3)
+
+        dds_layout.addWidget(self.dds_phase_slider, 6, 0, 1, 4)
+
+        dds_layout.addWidget(self.dds_amplitude_label, 7, 0, 1, 4)
+
+        dds_layout.addWidget(self.dds_amplitude_ref_label, 8, 0, 1, 1)
+        dds_layout.addWidget(self.dds_amplitude_ref_textbox, 8, 1, 1, 1)
+        dds_layout.addWidget(self.dds_desire_amp_label, 8, 2, 1, 1)
+        dds_layout.addWidget(self.dds_amplitude_textbox, 8, 3, 1, 1)
+
+        dds_layout.addWidget(self.dds_amplitude_slider, 9, 0, 1, 4)
+
+        # Adds the frames to the main window
+        layout.addWidget(dds_frame, 0, 0, 1, 1)
+        layout.addWidget(dac_frame, 0, 1, 1, 1)
 
         self.show()
+
+    def dds_load(self):
+        pass
+
+    def drg_toggle(self):
+        pass
+
+    def update_frequency_slider(self):
+        pass
+
+    def update_frequency_textbox(self):
+        pass
+
+    def update_freq_sysclk(self):
+        pass
+
+    def update_phase_slider(self):
+        pass
+
+    def update_phase_textbox(self):
+        pass
+
+    def update_amplitude_slider(self):
+        pass
+
+    def update_amplitude_textbox(self):
+        pass
+
+    def update_amplitude_ref(self):
+        pass
 
     # Ties the two sliders together
     def tie_outputs(self):
