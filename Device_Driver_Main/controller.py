@@ -9,7 +9,7 @@
 # appropriate bridigng calculations.    #
 #########################################
 
-# DOCUMENTATION
+# DOCUMENTATION (NEEDS TO BE UPDATED)
 #
 # send_voltage()
 #   (address: chr, desired_voltage: float, reference_voltage: float, gain: float, bipolar: bool) -> void
@@ -75,12 +75,12 @@ def send_ramp_setup(parameter: chr, start, stop, decrement, increment, rate_n, r
 
 # Sends a voltage command
 def send_voltage(address: chr, desired_voltage: float, reference_voltage: float, gain: float, bipolar: bool):
-    send_command(DAC.make_voltage_command(address, desired_voltage, reference_voltage, gain, bipolar))
+    send_command(DAC.create_voltage_command(address, desired_voltage, reference_voltage, gain, bipolar))
 
 
 # Sends a setup command
 def send_initialization(is_bipolar: bool, gain: str):
-    pyduino.DAC.send_initialization(is_bipolar, gain)
+    send_command(DAC.create_initialization_command(is_bipolar, gain))
 
 
 #######

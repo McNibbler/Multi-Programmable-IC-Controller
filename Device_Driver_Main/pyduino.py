@@ -9,6 +9,8 @@
 # controller.                           #
 #########################################
 
+# THIS DOCUMENTATION NEEDS FIXING!!!
+
 # HOW THIS LIBRARY WORKS
 #
 # The Pyduino library's purpose is to establish a simple communication command sequence that can be
@@ -292,7 +294,7 @@ class DAC:
 
     @staticmethod
     # Returns a formatted string command that can be sent
-    def make_voltage_command(address: chr, desired_voltage: float,
+    def create_voltage_command(address: chr, desired_voltage: float,
                              reference_voltage: float, gain: float, bipolar: bool) -> str:
         instructions = str(DAC_INDICATOR + DAC_WRITE + address)
 
@@ -317,7 +319,7 @@ class DAC:
 
     @staticmethod
     # Sends a setup command
-    def send_initialization(is_bipolar: bool, gain: str):
+    def create_initialization_command(is_bipolar: bool, gain: str):
         # Finite state machine for polarity and gain
         if is_bipolar:
             polarity = DAC_BIPOLAR
@@ -332,7 +334,7 @@ class DAC:
             gain = DAC_GAIN_432
 
         command = str(DAC_INDICATOR + DAC_START + polarity + gain + DONE)
-        send_command(command)
+        return command
 
 
 ###################################################
@@ -341,7 +343,7 @@ class DAC:
 # LOWER-LEVEL FUNCTIONS #
 #########################
 
-# Sends a written command
+# Sends a written command through the serial port to the device being communicated to
 def send_command(command: str):
     print(command)
     serial_port.write(command.encode())
