@@ -35,6 +35,10 @@ class Application(QWidget):
     def __init__(self):
         super().__init__()
 
+        ############
+        # DAC SIDE #
+        ############
+
         # Status text for the program
         self.status_text = QLabel()
         self.status_text.setText('Welcome!')
@@ -86,7 +90,7 @@ class Application(QWidget):
         self.com_select.activated[str].connect(self.change_com)
 
         # Voltage sliders
-        self.iterator = 100000
+        self.iterator = 1000000
         self.bipolar_range = range(int(-1*self.gain*self.reference_voltage*self.iterator),
                                    int(self.gain*self.reference_voltage*self.iterator), 1)
         self.unipolar_range = range(0, int(self.gain*self.reference_voltage*self.iterator), 1)
@@ -124,13 +128,82 @@ class Application(QWidget):
         self.readback_b = QLabel()
         self.readback_b.setText(str('DAC B: ' + str(0.0) + 'V'))
 
+        # States
+        self.is_bipolar = True
+        self.is_tied = False
+
+        ############
+        # DDS SIDE #
+        ############
+
+        # Load data to the dds
+        self.dds_load_button = QPushButton('Load to DDS')
+        self.dds_load_button.setToolTip('Update the DDS by loading all selected parameters to the device')
+        self.dds_load_button.clicked.connect(self.dds_load)
+
+        # Digital ramp generation parameters
+        self.drg_select_checkbox = QCheckBox('Digital Ramp Enable')
+        self.drg_select_checkbox.setToolTip('Ramp through a range of either Amplitudes, Phases, or Frequencies')
+        self.drg_select_checkbox.stateChanged.connect(self.drg_toggle)
+        self.drg_enabled = False
+
+        # Single Tone Sliders
+        self.dds_frequency_iterator = 5
+        self.dds_max_frequency = 1000000000
+        self.dds_frequency_range = range(0, int(self.dds_iterator*self.dds_max_frequency))
+
+        self.dds_frequency_label = QLabel()
+        self.dds_frequency_label.setText('Frequency (Hz)')
+        self.dds_frequency_slider = QSlider(Qt.Horizontal)
+        self.dds_frequency_slider.setRange(min(self.dds_frequency_range), max(self.dds_frequency_range))
+        self.dds_frequency_slider.valueChanged[int].connect(self.update_frequency_slider)
+        self.dds_frequency_textbox = QLineEdit()
+        self.dds_frequency_textbox.setText(str(0.0))
+        self.dds_frequency_textbox.returnPressed.connect(self.update_frequency_textbox)
+        self.dds_freq_sysclk_textbox = QLineEdit()
+        self.dds_freq_sysclk_textbox.setToolTip('Sysclk reference frequency (Hz)')
+        self.dds_freq_sysclk_textbox.setText(str(self.dds_max_frequency))
+        self.dds_freq_sysclk_textbox.returnPressed.connect(self.update_freq_sysclk)
+
+        self.dds_phase_iterator = 10000000
+        self.dds_max_phase = 360
+        self.dds_phase_range = range(0, int(self.dds_phase_iterator*self.dds_max_phase))
+
+        self.dds_phase_label = QLabel()
+        self.dds_phase_label.setText('Phase (Degrees)')
+        self.dds_phase_slider = QSlider(Qt.Horizontal)
+        self.dds_phase_slider.setRange(min(self.dds_phase_range), max(self.dds_phase_range))
+        self.dds_phase_slider.valueChanged[int].connect(self.update_phase_slider)
+        self.dds_phase_textbox = QLineEdit()
+        self.dds_phase_textbox.setText(str(0.0))
+        self.dds_phase_textbox.returnPressed.connect(self.update_phase_textbox)
+
+        self.dds_amp_iterator = 1000000
+        self.dds_max_amplitude = 1
+        self.dds_amplitude_range = range(0, int(self.dds_amp_iterator * self.dds_max_amplitude))
+
+        self.dds_amplitude_label = QLabel()
+        self.dds_amplitude_label.setText('Amplitude (V)')
+        self.dds_amplitude_slider = QSlider(Qt.Horizontal)
+        self.dds_amplitude_slider.setRange(min(self.dds_amplitude_range), max(self.dds_amplitude_range))
+        self.dds_amplitude_slider.valueChanged[int].connect(self.update_amplitude_slider)
+        self.dds_amplitude_textbox = QLineEdit()
+        self.dds_amplitude_textbox.setText(str(0.0))
+        self.dds_amplitude_textbox.returnPressed.connect(self.update_amplitude_textbox)
+        self.dds_amplitude_ref_textbox = QLineEdit()
+        self.dds_amplitude_ref_textbox.setToolTip('Max Reference Voltage (V)')
+        self.dds_amplitude_ref_textbox.setText(str(self.dds_max_amplitude))
+        self.dds_amplitude_ref_textbox.returnPressed.connect(self.update_amplitude_ref)
+
+
+        #############
+        # EXECUTION #
+        #############
+
         # Window dimensions
         self.WINDOW_SIZE = (325, 250)
         self.setFixedSize(self.WINDOW_SIZE[0], self.WINDOW_SIZE[1])
-        self.setWindowTitle('DAC Controller')
-
-        self.is_bipolar = True
-        self.is_tied = False
+        self.setWindowTitle('Device Controller')
 
         if controller.serial_port == "none":
             box = QMessageBox()

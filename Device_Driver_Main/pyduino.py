@@ -226,6 +226,7 @@ class DDS:
     @staticmethod
     # Creates a string for the parameters of the DRG setup
     def create_ramp_setup_string(parameter: chr, start, stop, decrement, increment, rate_n, rate_p):
+
         return ''
 
     @staticmethod
