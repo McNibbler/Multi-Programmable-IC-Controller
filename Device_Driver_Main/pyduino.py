@@ -203,15 +203,15 @@ class DDS:
 
     @staticmethod
     # Sends the command to signify that the data in the registers needs to be loaded
-    def load():
+    def create_load_command():
         load_command = str(DDS_INDICATOR + DDS_LOAD + DONE)
-        send_command(load_command)
+        return load_command
 
     @staticmethod
     # Creates a command to disable the ramp functionality
-    def disable_ramp():
+    def create_disable_ramp_command():
         disable_command = str(DDS_INDICATOR + DDS_OUTPUT + DDS_RAMP + DDS_RAMP_DISABLE + DONE)
-        send_command(disable_command)
+        return disable_command
 
     @staticmethod
     def create_ramp_setup_command():

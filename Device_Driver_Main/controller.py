@@ -33,11 +33,30 @@ import pyduino
 import serial
 from pyduino import *
 
+
 ###################################################
 
 #############
 # FUNCTIONS #
 #############
+
+#######
+# DDS #
+#######
+
+# Sends a load command to the DDS
+def load():
+    send_command(DDS.make_load_command())
+
+
+# Sends a disable ramp command to the DDS
+def disable_ramp():
+    send_command(DDS.make_disable_ramp_command())
+
+
+#######
+# DAC #
+#######
 
 # Sends a voltage command
 def send_voltage(address: chr, desired_voltage: float, reference_voltage: float, gain: float, bipolar: bool):
@@ -48,6 +67,10 @@ def send_voltage(address: chr, desired_voltage: float, reference_voltage: float,
 def send_initialization(is_bipolar: bool, gain: str):
     pyduino.DAC.send_initialization(is_bipolar, gain)
 
+
+#######
+# COM #
+#######
 
 # Use to set the COM Port being used
 def set_com(port: str):
