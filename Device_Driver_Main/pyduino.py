@@ -225,9 +225,36 @@ class DDS:
 
     @staticmethod
     # Creates a string for the parameters of the DRG setup
-    def create_ramp_setup_string(parameter: chr, start, stop, decrement, increment, rate_n, rate_p):
+    def create_ramp_setup_string(parameter: chr, sysclk, reference, start, stop, decrement, increment, rate_n, rate_p):
 
-        return ''
+        if parameter not in (DDS_FREQUENCY, DDS_PHASE, DDS_AMPLITUDE):
+
+            error('Invalid Parameter')
+            return ''
+
+        drg_lower_limit = DDS.calculate_full_scale_binary(32, start, reference)
+        drg_upper_limit = DDS.calculate_full_scale_binary(32, stop, reference)
+
+        drg_decrement = DDS.calculate_full_scale_binary(32, decrement, (drg_upper_limit - drg_lower_limit))
+        drg_increment = DDS.calculate_full_scale_binary(32, increment, (drg_upper_limit - drg_lower_limit))
+
+        drg_rate_n = DDS.calculate_full_scale_binary(16, 1 / rate_n, sysclk / 4)
+        drg_rate_p = DDS.calculate_full_scale_binary(16, 1 / rate_p, sysclk / 4)
+
+        working_string = parameter
+        working_string = str(working_string + drg_lower_limit)
+        working_string = str(working_string + ',')
+        working_string = str(working_string + drg_upper_limit)
+        working_string = str(working_string + ',')
+        working_string = str(working_string + drg_decrement)
+        working_string = str(working_string + ',')
+        working_string = str(working_string + drg_increment)
+        working_string = str(working_string + ',')
+        working_string = str(working_string + drg_rate_n)
+        working_string = str(working_string + ',')
+        working_string = str(working_string + drg_rate_p)
+
+        return working_string
 
     @staticmethod
     # literally just works the same as the single tone because I'm using the same method to take care of it, it's just
