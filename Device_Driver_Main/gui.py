@@ -64,7 +64,7 @@ class Application(QWidget):
         self.connect_sliders_checkbox.stateChanged.connect(self.tie_outputs)
 
         # Sets the reference voltage
-        self.reference_voltage = 2.5
+        self.reference_voltage = 2.024
         self.reference_label = QLabel()
         self.reference_label.setText('Ref (V):')
         self.reference_textbox = QLineEdit()
@@ -339,7 +339,18 @@ class Application(QWidget):
         self.show()
 
     def dds_load(self):
-        pass
+        if self.drg_enabled:
+            pass
+        else:
+            amplitude = float(self.dds_amplitude_textbox.text())
+            amplitude_ref = float(self.dds_amplitude_ref_textbox.text())
+            phase = float(self.dds_phase_textbox.text())
+            frequency = float(self.dds_frequency_textbox.text())
+            freq_sysclk = float(self.dds_freq_sysclk_textbox.text())
+
+            controller.disable_ramp()
+            controller.send_single_tone(amplitude, amplitude_ref, phase, frequency, freq_sysclk)
+            controller.load()
 
     def drg_toggle(self):
         pass

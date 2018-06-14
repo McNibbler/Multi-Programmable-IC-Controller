@@ -46,12 +46,12 @@ from pyduino import *
 
 # Sends a load command to the DDS
 def load():
-    send_command(DDS.make_load_command())
+    send_command(DDS.create_load_command())
 
 
 # Sends a disable ramp command to the DDS
 def disable_ramp():
-    send_command(DDS.make_disable_ramp_command())
+    send_command(DDS.create_disable_ramp_command())
 
 
 # Sends a single tone setup command to the DDS
