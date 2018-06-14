@@ -226,8 +226,8 @@ class Application(QWidget):
         #############
 
         # Window dimensions
-        self.WINDOW_SIZE = (900, 300)
-        self.setFixedSize(self.WINDOW_SIZE[0], self.WINDOW_SIZE[1])
+        # self.WINDOW_SIZE = (900, 300)
+        # self.setFixedSize(self.WINDOW_SIZE[0], self.WINDOW_SIZE[1])
         self.setWindowTitle('Device Controller')
 
         if controller.serial_port == "none":
@@ -257,7 +257,7 @@ class Application(QWidget):
         dac_layout = QGridLayout()
         dac_frame.setLayout(dac_layout)
 
-        dac_frame.setFixedSize(300, 275)
+        # dac_frame.setFixedSize(300, 275)
 
         dac_layout.addWidget(self.dac_title, 0, 0, 1, 3)
 
@@ -298,7 +298,7 @@ class Application(QWidget):
         dds_single_layout = QGridLayout()
         dds_single_frame.setLayout(dds_single_layout)
 
-        dds_single_frame.setFixedSize(350, 250)
+        # dds_single_frame.setFixedSize(350, 250)
 
 
         dds_single_layout.addWidget(self.dds_frequency_label, 0, 0, 1, 2)
