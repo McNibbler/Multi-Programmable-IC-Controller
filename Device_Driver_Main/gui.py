@@ -361,8 +361,6 @@ class Application(QWidget):
 
         dds_single_layout.addWidget(self.dds_amplitude_slider, 7, 0, 1, 4)
 
-        dds_single_layout.addWidget(self.dds_load_button, 8, 0, 1, 4)
-
         # Single Tone half of frame
         dds_ramp_frame = QFrame()
         dds_ramp_layout = QGridLayout()
@@ -386,6 +384,7 @@ class Application(QWidget):
         dds_layout.addWidget(self.drg_select_checkbox, 0, 1, 1, 1)
         dds_layout.addWidget(dds_single_frame, 1, 0, 1, 1)
         dds_layout.addWidget(dds_ramp_frame, 1, 1, 1, 1)
+        dds_layout.addWidget(self.dds_load_button, 2, 0, 1, 2)
 
         # Adds the frames to the main window
         layout.addWidget(dds_frame, 0, 0, 1, 1)
