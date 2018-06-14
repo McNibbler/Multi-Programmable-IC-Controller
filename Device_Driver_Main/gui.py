@@ -214,6 +214,43 @@ class Application(QWidget):
         self.dds_amplitude_ref_textbox.setText("%.5f" % self.dds_max_amplitude)
         self.dds_amplitude_ref_textbox.returnPressed.connect(self.update_amplitude_ref)
 
+        # DRG sliders
+        self.dds_drg_parameters = ['Frequency (Hz)', 'Phase (deg)', 'Amplitude (V)']
+
+        self.dds_drg_parameter_select = QComboBox()
+        self.dds_drg_parameter_select.addItems(self.dds_drg_parameters)
+        self.dds_drg_parameter_select.setCurrentIndex(0)
+        self.dds_drg_parameter_select.activated[str].connect(self.update_drg_parameter)
+
+        self.dds_drg_start_stop_max = self.dds_max_frequency
+        self.dds_drg_start_stop_iterator = self.dds_frequency_iterator
+        self.dds_drg_start_stop_range = range(0, int(self.dds_drg_start_stop_max*self.dds_drg_start_stop_iterator))
+
+        self.dds_drg_start_label = QLabel()
+        self.dds_drg_start_label.setText('Start')
+        self.dds_drg_start_textbox = QLineEdit()
+        self.dds_drg_start_textbox.setText("%.5f" % 0.0)
+        self.dds_drg_start_textbox.returnPressed.connect(self.update_start_textbox)
+        self.dds_drg_start_slider = QSlider(Qt.Horizontal)
+        self.dds_drg_start_slider.setRange(min(self.dds_drg_start_stop_range), max(self.dds_drg_start_stop_range))
+        self.dds_drg_start_slider.setValue(min(self.dds_drg_start_stop_range))
+        self.dds_drg_start_slider.sliderReleased.connect(self.update_start_slider)
+
+        self.dds_drg_stop_label = QLabel()
+        self.dds_drg_stop_label.setText('Stop')
+        self.dds_drg_stop_textbox = QLineEdit()
+        self.dds_drg_stop_textbox.setText("%.5f" % self.dds_drg_start_stop_max)
+        self.dds_drg_stop_textbox.returnPressed.connect(self.update_stop_textbox)
+        self.dds_drg_stop_slider = QSlider(Qt.Horizontal)
+        self.dds_drg_stop_slider.setRange(min(self.dds_drg_start_stop_range), max(self.dds_drg_start_stop_range))
+        self.dds_drg_stop_slider.setValue(max(self.dds_drg_start_stop_range))
+        self.dds_drg_stop_slider.sliderReleased.connect(self.update_stop_slider)
+
+        # I DONT REALLY GET HOW TO DO THIS PART YET
+        # self.dds_drg_decrement_increment_max = self.dds_max_frequency
+        # self.dds_drg_decrement_increment_iterator = self.dds_frequency_iterator
+        # self.dds_drg_decrement_increment_range = range(0, int(self.dds_drg_start_stop_max * self.dds_drg_start_stop_iterator))
+
         # Textbox validators
         self.dds_freq_sysclk_textbox.setValidator(self.only_double)
         self.dds_frequency_textbox.setValidator(self.only_double)
@@ -300,7 +337,6 @@ class Application(QWidget):
 
         # dds_single_frame.setFixedSize(350, 250)
 
-
         dds_single_layout.addWidget(self.dds_frequency_label, 0, 0, 1, 2)
 
         dds_single_layout.addWidget(self.dds_freq_sysclk_label, 1, 0, 1, 1)
@@ -327,10 +363,29 @@ class Application(QWidget):
 
         dds_single_layout.addWidget(self.dds_load_button, 8, 0, 1, 4)
 
+        # Single Tone half of frame
+        dds_ramp_frame = QFrame()
+        dds_ramp_layout = QGridLayout()
+        dds_ramp_frame.setLayout(dds_ramp_layout)
+
+        dds_ramp_layout.addWidget(self.dds_drg_parameter_select, 0, 0, 1, 3)
+
+        dds_ramp_layout.addWidget(self.dds_drg_start_label, 1, 0, 1, 1)
+        dds_ramp_layout.addWidget(self.dds_drg_start_textbox, 1, 2, 1, 1)
+
+        dds_ramp_layout.addWidget(self.dds_drg_start_slider, 2, 0, 1, 3)
+
+        dds_ramp_layout.addWidget(self.dds_drg_stop_label, 3, 0, 1, 1)
+        dds_ramp_layout.addWidget(self.dds_drg_stop_textbox, 3, 2, 1, 1)
+
+        dds_ramp_layout.addWidget(self.dds_drg_stop_slider, 4, 0, 1, 3)
+
+
         # Adds the DDS sub-frames to the main frame
         dds_layout.addWidget(self.dds_title, 0, 0, 1, 1)
         dds_layout.addWidget(self.drg_select_checkbox, 0, 1, 1, 1)
         dds_layout.addWidget(dds_single_frame, 1, 0, 1, 1)
+        dds_layout.addWidget(dds_ramp_frame, 1, 1, 1, 1)
 
         # Adds the frames to the main window
         layout.addWidget(dds_frame, 0, 0, 1, 1)
@@ -353,6 +408,21 @@ class Application(QWidget):
             controller.load()
 
     def drg_toggle(self):
+        pass
+
+    def update_drg_parameter(self):
+        pass
+
+    def update_start_textbox(self):
+        pass
+
+    def update_start_slider(self):
+        pass
+
+    def update_stop_textbox(self):
+        pass
+
+    def update_stop_slider(self):
         pass
 
     def update_frequency_slider(self):
