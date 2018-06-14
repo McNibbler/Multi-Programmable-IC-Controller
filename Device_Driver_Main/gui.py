@@ -94,7 +94,7 @@ class Application(QWidget):
         self.com_select.activated[str].connect(self.change_com)
 
         # Voltage sliders
-        self.iterator = 100000
+        self.iterator = 1 << 14
         self.bipolar_range = range(int(-1*self.gain*self.reference_voltage*self.iterator),
                                    int(self.gain*self.reference_voltage*self.iterator), 1)
         self.unipolar_range = range(0, int(self.gain*self.reference_voltage*self.iterator), 1)
@@ -102,7 +102,7 @@ class Application(QWidget):
         self.voltage_label_a = QLabel()
         self.voltage_label_a.setText('DAC A')
         self.voltage_textbox_a = QLineEdit()
-        self.voltage_textbox_a.setText(str(0.0))
+        self.voltage_textbox_a.setText("%.5f" % 0.0)
         self.voltage_textbox_a.returnPressed.connect(self.update_sliders)
         self.voltage_slider_a = QSlider(Qt.Horizontal)
         self.voltage_slider_a.setRange(min(self.bipolar_range), max(self.bipolar_range))
@@ -112,7 +112,7 @@ class Application(QWidget):
         self.voltage_label_b = QLabel()
         self.voltage_label_b.setText('DAC B')
         self.voltage_textbox_b = QLineEdit()
-        self.voltage_textbox_b.setText(str(0.0))
+        self.voltage_textbox_b.setText("%.5f" % 0.0)
         self.voltage_textbox_b.returnPressed.connect(self.update_sliders)
         self.voltage_slider_b = QSlider(Qt.Horizontal)
         self.voltage_slider_b.setRange(min(self.bipolar_range), max(self.bipolar_range))
@@ -121,6 +121,7 @@ class Application(QWidget):
 
         # Input text boxes for voltage
         self.only_double = QDoubleValidator()
+        self.reference_textbox.setValidator(self.only_double)
         self.voltage_textbox_a.setValidator(self.only_double)
         self.voltage_textbox_b.setValidator(self.only_double)
 
@@ -156,69 +157,76 @@ class Application(QWidget):
         self.drg_enabled = False
 
         # Single Tone Sliders
-        self.dds_frequency_iterator = 5
-        self.dds_max_frequency = 100000
+        self.dds_max_frequency = 1<<30   # kind of arbitrary here so it means the slider wont be as precise; program
+        self.dds_frequency_iterator = 0.01     # is way too slow if I give the proper slider precision (textbox is fine)
         self.dds_frequency_range = range(0, int(self.dds_frequency_iterator*self.dds_max_frequency))
 
         self.dds_frequency_label = QLabel()
         self.dds_frequency_label.setText('Frequency (Hz)')
         self.dds_frequency_slider = QSlider(Qt.Horizontal)
         self.dds_frequency_slider.setRange(min(self.dds_frequency_range), max(self.dds_frequency_range))
-        self.dds_frequency_slider.valueChanged[int].connect(self.update_frequency_slider)
+        self.dds_frequency_slider.sliderReleased.connect(self.update_frequency_slider)
         self.dds_desire_freq_label = QLabel()
         self.dds_desire_freq_label.setText('Desired:')
         self.dds_frequency_textbox = QLineEdit()
-        self.dds_frequency_textbox.setText(str(0.0))
+        self.dds_frequency_textbox.setText("%.3f" % 0.0)
         self.dds_frequency_textbox.returnPressed.connect(self.update_frequency_textbox)
         self.dds_freq_sysclk_label = QLabel()
         self.dds_freq_sysclk_label.setText('Sysclk:')
         self.dds_freq_sysclk_textbox = QLineEdit()
         self.dds_freq_sysclk_textbox.setToolTip('Sysclk reference frequency (Hz)')
-        self.dds_freq_sysclk_textbox.setText(str(self.dds_max_frequency))
+        self.dds_freq_sysclk_textbox.setText("%.3f" % self.dds_max_frequency)
         self.dds_freq_sysclk_textbox.returnPressed.connect(self.update_freq_sysclk)
 
-        self.dds_phase_iterator = 100000
         self.dds_max_phase = 360
+        self.dds_phase_iterator = int((1 << 16) / self.dds_max_phase)
         self.dds_phase_range = range(0, int(self.dds_phase_iterator*self.dds_max_phase))
 
         self.dds_phase_label = QLabel()
         self.dds_phase_label.setText('Phase (Degrees)')
         self.dds_phase_slider = QSlider(Qt.Horizontal)
         self.dds_phase_slider.setRange(min(self.dds_phase_range), max(self.dds_phase_range))
-        self.dds_phase_slider.valueChanged[int].connect(self.update_phase_slider)
+        self.dds_phase_slider.sliderReleased.connect(self.update_phase_slider)
         self.dds_desire_phase_label = QLabel()
         self.dds_desire_phase_label.setText('Desired:')
         self.dds_phase_textbox = QLineEdit()
-        self.dds_phase_textbox.setText(str(0.0))
+        self.dds_phase_textbox.setText("%.5f" % 0.0)
         self.dds_phase_textbox.returnPressed.connect(self.update_phase_textbox)
 
-        self.dds_amp_iterator = 100000
         self.dds_max_amplitude = 1
-        self.dds_amplitude_range = range(0, int(self.dds_amp_iterator * self.dds_max_amplitude))
+        self.dds_amplitude_iterator = int((1 << 14) * 10 / self.dds_max_amplitude)
+        self.dds_amplitude_range = range(0, int(self.dds_amplitude_iterator * self.dds_max_amplitude))
 
         self.dds_amplitude_label = QLabel()
         self.dds_amplitude_label.setText('Amplitude (V)')
         self.dds_amplitude_slider = QSlider(Qt.Horizontal)
         self.dds_amplitude_slider.setRange(min(self.dds_amplitude_range), max(self.dds_amplitude_range))
-        self.dds_amplitude_slider.valueChanged[int].connect(self.update_amplitude_slider)
+        self.dds_amplitude_slider.sliderReleased.connect(self.update_amplitude_slider)
         self.dds_desire_amp_label = QLabel()
         self.dds_desire_amp_label.setText('Desired:')
         self.dds_amplitude_textbox = QLineEdit()
-        self.dds_amplitude_textbox.setText(str(0.0))
+        self.dds_amplitude_textbox.setText("%.5f" % 0.0)
         self.dds_amplitude_textbox.returnPressed.connect(self.update_amplitude_textbox)
         self.dds_amplitude_ref_label = QLabel()
         self.dds_amplitude_ref_label.setText('Reference:')
         self.dds_amplitude_ref_textbox = QLineEdit()
         self.dds_amplitude_ref_textbox.setToolTip('Max Reference Voltage (V)')
-        self.dds_amplitude_ref_textbox.setText(str(self.dds_max_amplitude))
+        self.dds_amplitude_ref_textbox.setText("%.5f" % self.dds_max_amplitude)
         self.dds_amplitude_ref_textbox.returnPressed.connect(self.update_amplitude_ref)
+
+        # Textbox validators
+        self.dds_freq_sysclk_textbox.setValidator(self.only_double)
+        self.dds_frequency_textbox.setValidator(self.only_double)
+        self.dds_phase_textbox.setValidator(self.only_double)
+        self.dds_amplitude_ref_textbox.setValidator(self.only_double)
+        self.dds_amplitude_textbox.setValidator(self.only_double)
 
         #############
         # EXECUTION #
         #############
 
         # Window dimensions
-        self.WINDOW_SIZE = (620, 300)
+        self.WINDOW_SIZE = (670, 300)
         self.setFixedSize(self.WINDOW_SIZE[0], self.WINDOW_SIZE[1])
         self.setWindowTitle('Device Controller')
 
@@ -285,7 +293,7 @@ class Application(QWidget):
         dds_layout = QGridLayout()
         dds_frame.setLayout(dds_layout)
 
-        dds_frame.setFixedSize(300, 275)
+        dds_frame.setFixedSize(350, 275)
 
         dds_layout.addWidget(self.dds_title, 0, 0, 1, 2)
         dds_layout.addWidget(self.drg_select_checkbox, 0, 2, 1, 2)
@@ -330,28 +338,85 @@ class Application(QWidget):
         pass
 
     def update_frequency_slider(self):
-        pass
+        self.dds_frequency_textbox.setText("%.3f" % (self.dds_frequency_slider.value() / self.dds_frequency_iterator))
 
     def update_frequency_textbox(self):
-        pass
+        new_frequency = float(self.dds_frequency_textbox.text())
+        reference = self.dds_max_frequency
+
+        if new_frequency > reference or new_frequency < 0:
+            box = QMessageBox()
+            box.setIcon(QMessageBox.Warning)
+            box.setText('Bad Input:')
+            box.setInformativeText('Chosen frequency exceeds sysclk.')
+            box.setStandardButtons(QMessageBox.Ok)
+            box.exec_()
+            self.dds_frequency_textbox.setText("%.3f" % (self.dds_frequency_slider.value() / self.dds_frequency_iterator))
+            return
+
+        self.dds_frequency_slider.setValue(new_frequency * self.dds_frequency_iterator)
 
     def update_freq_sysclk(self):
-        pass
+        if float(self.dds_freq_sysclk_textbox.text()) < 1/self.dds_frequency_iterator:
+            self.dds_max_frequency = float(1/self.dds_frequency_iterator)
+            self.dds_freq_sysclk_textbox.setText("%.3f" % self.dds_max_frequency)
+        else:
+            self.dds_max_frequency = float(self.dds_freq_sysclk_textbox.text())
+
+        self.dds_frequency_range = range(0, int(self.dds_max_frequency * self.dds_frequency_iterator))
+        self.dds_frequency_slider.setRange(min(self.dds_frequency_range), max(self.dds_frequency_range))
+        self.dds_frequency_slider.setValue(0)
+        self.dds_frequency_textbox.setText("%.3f" % 0.0)
 
     def update_phase_slider(self):
-        pass
+        self.dds_phase_textbox.setText("%.5f" % (self.dds_phase_slider.value() / self.dds_phase_iterator))
 
     def update_phase_textbox(self):
-        pass
+        new_phase = float(self.dds_phase_textbox.text())
+        reference = self.dds_max_phase
+
+        if new_phase > reference or new_phase < 0:
+            box = QMessageBox()
+            box.setIcon(QMessageBox.Warning)
+            box.setText('Bad Input:')
+            box.setInformativeText('Chosen phase out of range.')
+            box.setStandardButtons(QMessageBox.Ok)
+            box.exec_()
+            self.dds_phase_textbox.setText("%.5f" % (self.dds_phase_slider.value() / self.dds_phase_iterator))
+            return
+
+        self.dds_phase_slider.setValue(new_phase * self.dds_phase_iterator)
 
     def update_amplitude_slider(self):
-        pass
+        self.dds_amplitude_textbox.setText("%.5f" % (self.dds_amplitude_slider.value() / self.dds_amplitude_iterator))
 
     def update_amplitude_textbox(self):
-        pass
+        new_amplitude = float(self.dds_amplitude_textbox.text())
+        reference = self.dds_max_amplitude
+
+        if new_amplitude > reference or new_amplitude < 0:
+            box = QMessageBox()
+            box.setIcon(QMessageBox.Warning)
+            box.setText('Bad Input:')
+            box.setInformativeText('Chosen amplitude exceeds reference.')
+            box.setStandardButtons(QMessageBox.Ok)
+            box.exec_()
+            self.dds_amplitude_textbox.setText("%.5f" % (self.dds_amplitude_slider.value() / self.dds_amplitude_iterator))
+            return
+
+        self.dds_amplitude_slider.setValue(new_amplitude * self.dds_amplitude_iterator)
 
     def update_amplitude_ref(self):
-        pass
+        if float(self.dds_amplitude_ref_textbox.text()) < 1/self.dds_amplitude_iterator:
+            self.dds_max_amplitude = float(1/self.dds_amplitude_iterator)
+            self.dds_amplitude_ref_textbox.setText("%.5f" % self.dds_max_amplitude)
+        else:
+            self.dds_max_amplitude = float(self.dds_amplitude_ref_textbox.text())
+
+        self.dds_amplitude_range = range(0, int(self.dds_max_amplitude*self.dds_amplitude_iterator))
+        self.dds_amplitude_slider.setRange(min(self.dds_amplitude_range), max(self.dds_amplitude_range))
+        self.dds_amplitude_slider.setValue(0)
+        self.dds_amplitude_textbox.setText("%.5f" % 0.0)
 
     # Ties the two sliders together
     def tie_outputs(self):
@@ -384,8 +449,8 @@ class Application(QWidget):
             self.voltage_slider_a.setRange(min(self.bipolar_range), max(self.bipolar_range))
             self.voltage_slider_b.setRange(min(self.bipolar_range), max(self.bipolar_range))
 
-        self.voltage_textbox_a.setText(str(0.0))
-        self.voltage_textbox_b.setText(str(0.0))
+        self.voltage_textbox_a.setText("%.5f" % 0.0)
+        self.voltage_textbox_b.setText("%.5f" % 0.0)
         self.voltage_slider_a.setSliderPosition(0)
         self.voltage_slider_b.setSliderPosition(0)
 
@@ -401,8 +466,8 @@ class Application(QWidget):
         new_voltage_a = self.voltage_slider_a.value() / self.iterator
         new_voltage_b = self.voltage_slider_b.value() / self.iterator
 
-        self.voltage_textbox_a.setText(str(new_voltage_a))
-        self.voltage_textbox_b.setText(str(new_voltage_b))
+        self.voltage_textbox_a.setText("%.5f" % new_voltage_a)
+        self.voltage_textbox_b.setText("%.5f" % new_voltage_b)
 
         self.status_text.setText('Welcome!')
 
@@ -427,8 +492,8 @@ class Application(QWidget):
                 box.setStandardButtons(QMessageBox.Ok)
                 box.exec_()
                 self.status_text.setText('Bad Input')
-                self.voltage_textbox_a.setText(str(self.voltage_slider_a.value() / self.iterator))
-                self.voltage_textbox_b.setText(str(self.voltage_slider_b.value() / self.iterator))
+                self.voltage_textbox_a.setText("%.5f" % (self.voltage_slider_a.value() / self.iterator))
+                self.voltage_textbox_b.setText("%.5f" % (self.voltage_slider_b.value() / self.iterator))
                 return
         else:
             if (new_voltage_a > self.gain*self.reference_voltage
@@ -442,8 +507,8 @@ class Application(QWidget):
                 box.setStandardButtons(QMessageBox.Ok)
                 box.exec_()
                 self.status_text.setText('Bad Input')
-                self.voltage_textbox_a.setText(str(self.voltage_slider_a.value() / self.iterator))
-                self.voltage_textbox_b.setText(str(self.voltage_slider_b.value() / self.iterator))
+                self.voltage_textbox_a.setText("%.5f" % (self.voltage_slider_a.value() / self.iterator))
+                self.voltage_textbox_b.setText("%.5f" % (self.voltage_slider_b.value() / self.iterator))
                 return
 
         # Sets the voltage sliders to match the new input
@@ -485,8 +550,8 @@ class Application(QWidget):
         self.gain = float(self.gain_select.currentText())
 
         # Resets everything
-        self.voltage_textbox_a.setText(str(0.0))
-        self.voltage_textbox_b.setText(str(0.0))
+        self.voltage_textbox_a.setText("%.5f" % 0.0)
+        self.voltage_textbox_b.setText("%.5f" % 0.0)
         self.voltage_slider_a.setValue(0)
         self.voltage_slider_b.setValue(0)
 
