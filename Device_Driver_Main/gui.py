@@ -247,9 +247,55 @@ class Application(QWidget):
         self.dds_drg_stop_slider.sliderReleased.connect(self.update_stop_slider)
 
         # I DONT REALLY GET HOW TO DO THIS PART YET
-        # self.dds_drg_decrement_increment_max = self.dds_max_frequency
-        # self.dds_drg_decrement_increment_iterator = self.dds_frequency_iterator
-        # self.dds_drg_decrement_increment_range = range(0, int(self.dds_drg_start_stop_max * self.dds_drg_start_stop_iterator))
+        self.dds_drg_decrement_increment_max = self.dds_max_frequency
+        self.dds_drg_decrement_increment_iterator = self.dds_frequency_iterator
+        self.dds_drg_decrement_increment_range = range(0, int(self.dds_drg_start_stop_max * self.dds_drg_start_stop_iterator))
+
+        self.dds_drg_decrement_label = QLabel()
+        self.dds_drg_decrement_label.setText('Decrement')
+        self.dds_drg_decrement_textbox = QLineEdit()
+        self.dds_drg_decrement_textbox.setText("%.5f" % 0.0)
+        self.dds_drg_decrement_textbox.returnPressed.connect(self.update_decrement_textbox)
+        self.dds_drg_decrement_slider = QSlider(Qt.Horizontal)
+        self.dds_drg_decrement_slider.setRange(min(self.dds_drg_decrement_increment_range), max(self.dds_drg_decrement_increment_range))
+        self.dds_drg_decrement_slider.setValue(max(self.dds_drg_decrement_increment_range))
+        self.dds_drg_decrement_slider.sliderReleased.connect(self.update_decrement_slider)
+
+        self.dds_drg_increment_label = QLabel()
+        self.dds_drg_increment_label.setText('Increment')
+        self.dds_drg_increment_textbox = QLineEdit()
+        self.dds_drg_increment_textbox.setText("%.5f" % 0.0)
+        self.dds_drg_increment_textbox.returnPressed.connect(self.update_increment_textbox)
+        self.dds_drg_increment_slider = QSlider(Qt.Horizontal)
+        self.dds_drg_increment_slider.setRange(min(self.dds_drg_decrement_increment_range), max(self.dds_drg_decrement_increment_range))
+        self.dds_drg_increment_slider.setValue(max(self.dds_drg_decrement_increment_range))
+        self.dds_drg_increment_slider.sliderReleased.connect(self.update_increment_slider)
+
+        # WTF DO I DO HERE
+        self.dds_drg_rate_limit = 1
+        self.dds_drg_rate_iterator = 1
+        self.dds_drg_rate_range = [0, 1]
+
+        self.dds_drg_rate_n_label = QLabel()
+        self.dds_drg_rate_n_label.setText('Rate -')
+        self.dds_drg_rate_n_textbox = QLineEdit()
+        self.dds_drg_rate_n_textbox.setText("%.5f" % 0.0)
+        self.dds_drg_rate_n_textbox.returnPressed.connect(self.update_rate_n_textbox)
+        self.dds_drg_rate_n_slider = QSlider(Qt.Horizontal)
+        self.dds_drg_rate_n_slider.setRange(min(self.dds_drg_rate_range), max(self.dds_drg_rate_range))
+        self.dds_drg_rate_n_slider.setValue(max(self.dds_drg_rate_range))
+        self.dds_drg_rate_n_slider.sliderReleased.connect(self.update_rate_n_slider)
+
+        self.dds_drg_rate_p_label = QLabel()
+        self.dds_drg_rate_p_label.setText('Rate +')
+        self.dds_drg_rate_p_textbox = QLineEdit()
+        self.dds_drg_rate_p_textbox.setText("%.5f" % 0.0)
+        self.dds_drg_rate_p_textbox.returnPressed.connect(self.update_rate_p_textbox)
+        self.dds_drg_rate_p_slider = QSlider(Qt.Horizontal)
+        self.dds_drg_rate_p_slider.setRange(min(self.dds_drg_rate_range), max(self.dds_drg_rate_range))
+        self.dds_drg_rate_p_slider.setValue(max(self.dds_drg_rate_range))
+        self.dds_drg_rate_p_slider.sliderReleased.connect(self.update_rate_p_slider)
+
 
         # Textbox validators
         self.dds_freq_sysclk_textbox.setValidator(self.only_double)
@@ -410,6 +456,30 @@ class Application(QWidget):
         pass
 
     def update_drg_parameter(self):
+        pass
+
+    def update_decrement_textbox(self):
+        pass
+
+    def update_decrement_slider(self):
+        pass
+
+    def update_increment_textbox(self):
+        pass
+
+    def update_increment_slider(self):
+        pass
+
+    def update_rate_n_textbox(self):
+        pass
+
+    def update_rate_n_slider(self):
+        pass
+
+    def update_rate_p_textbox(self):
+        pass
+
+    def update_rate_p_slider(self):
         pass
 
     def update_start_textbox(self):
