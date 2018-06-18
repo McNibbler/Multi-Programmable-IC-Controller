@@ -382,37 +382,39 @@ class Application(QWidget):
         dds_single_frame.setLayout(dds_single_layout)
 
         # dds_single_frame.setFixedSize(350, 250)
+        dds_single_layout.addWidget(self.drg_select_checkbox, 0, 0, 1, 1)
+        dds_single_layout.addWidget(self.dds_drg_parameter_select, 0, 1, 1, 3)
 
-        dds_single_layout.addWidget(self.dds_frequency_label, 0, 0, 1, 2)
+        dds_single_layout.addWidget(self.dds_frequency_label, 1, 0, 1, 2)
 
-        dds_single_layout.addWidget(self.dds_freq_sysclk_label, 1, 0, 1, 1)
-        dds_single_layout.addWidget(self.dds_freq_sysclk_textbox, 1, 1, 1, 1)
-        dds_single_layout.addWidget(self.dds_desire_freq_label, 1, 2, 1, 1)
-        dds_single_layout.addWidget(self.dds_frequency_textbox, 1, 3, 1, 1)
+        dds_single_layout.addWidget(self.dds_freq_sysclk_label, 2, 0, 1, 1)
+        dds_single_layout.addWidget(self.dds_freq_sysclk_textbox, 2, 1, 1, 1)
+        dds_single_layout.addWidget(self.dds_desire_freq_label, 2, 2, 1, 1)
+        dds_single_layout.addWidget(self.dds_frequency_textbox, 2, 3, 1, 1)
 
-        dds_single_layout.addWidget(self.dds_frequency_slider, 2, 0, 1, 4)
+        dds_single_layout.addWidget(self.dds_frequency_slider, 3, 0, 1, 4)
 
-        dds_single_layout.addWidget(self.dds_phase_label, 3, 0, 1, 2)
-        dds_single_layout.addWidget(self.dds_desire_phase_label, 3, 2, 1, 1)
-        dds_single_layout.addWidget(self.dds_phase_textbox, 3, 3, 1, 1)
+        dds_single_layout.addWidget(self.dds_phase_label, 4, 0, 1, 2)
+        dds_single_layout.addWidget(self.dds_desire_phase_label, 4, 2, 1, 1)
+        dds_single_layout.addWidget(self.dds_phase_textbox, 4, 3, 1, 1)
 
-        dds_single_layout.addWidget(self.dds_phase_slider, 4, 0, 1, 4)
+        dds_single_layout.addWidget(self.dds_phase_slider, 5, 0, 1, 4)
 
-        dds_single_layout.addWidget(self.dds_amplitude_label, 5, 0, 1, 2)
+        dds_single_layout.addWidget(self.dds_amplitude_label, 6, 0, 1, 2)
 
-        dds_single_layout.addWidget(self.dds_amplitude_ref_label, 6, 0, 1, 1)
-        dds_single_layout.addWidget(self.dds_amplitude_ref_textbox, 6, 1, 1, 1)
-        dds_single_layout.addWidget(self.dds_desire_amp_label, 6, 2, 1, 1)
-        dds_single_layout.addWidget(self.dds_amplitude_textbox, 6, 3, 1, 1)
+        dds_single_layout.addWidget(self.dds_amplitude_ref_label, 7, 0, 1, 1)
+        dds_single_layout.addWidget(self.dds_amplitude_ref_textbox, 7, 1, 1, 1)
+        dds_single_layout.addWidget(self.dds_desire_amp_label, 7, 2, 1, 1)
+        dds_single_layout.addWidget(self.dds_amplitude_textbox, 7, 3, 1, 1)
 
-        dds_single_layout.addWidget(self.dds_amplitude_slider, 7, 0, 1, 4)
+        dds_single_layout.addWidget(self.dds_amplitude_slider, 8, 0, 1, 4)
+
+        dds_single_layout.addWidget(self.dds_load_button, 9, 0, 1, 4)
 
         # Single Tone half of frame
         dds_ramp_frame = QFrame()
         dds_ramp_layout = QGridLayout()
         dds_ramp_frame.setLayout(dds_ramp_layout)
-
-        dds_ramp_layout.addWidget(self.dds_drg_parameter_select, 0, 0, 1, 3)
 
         dds_ramp_layout.addWidget(self.dds_drg_start_label, 1, 0, 1, 1)
         dds_ramp_layout.addWidget(self.dds_drg_start_textbox, 1, 2, 1, 1)
@@ -424,23 +426,31 @@ class Application(QWidget):
 
         dds_ramp_layout.addWidget(self.dds_drg_stop_slider, 4, 0, 1, 3)
 
-        dds_ramp_layout.addWidget(self.dds_drg_rate_n_label, 5, 0, 1, 1)
-        dds_ramp_layout.addWidget(self.dds_drg_rate_n_textbox, 5, 2, 1, 1)
+        dds_ramp_layout.addWidget(self.dds_drg_decrement_label, 5, 0, 1, 1)
+        dds_ramp_layout.addWidget(self.dds_drg_decrement_textbox, 5, 2, 1, 1)
 
-        dds_ramp_layout.addWidget(self.dds_drg_rate_n_slider, 6, 0, 1, 3)
+        dds_ramp_layout.addWidget(self.dds_drg_decrement_slider, 6, 0, 1, 3)
 
-        dds_ramp_layout.addWidget(self.dds_drg_rate_p_label, 7, 0, 1, 1)
-        dds_ramp_layout.addWidget(self.dds_drg_rate_p_textbox, 7, 2, 1, 1)
+        dds_ramp_layout.addWidget(self.dds_drg_increment_label, 7, 0, 1, 1)
+        dds_ramp_layout.addWidget(self.dds_drg_increment_textbox, 7, 2, 1, 1)
 
-        dds_ramp_layout.addWidget(self.dds_drg_rate_p_slider, 8, 0, 1, 3)
+        dds_ramp_layout.addWidget(self.dds_drg_increment_slider, 8, 0, 1, 3)
+
+        dds_ramp_layout.addWidget(self.dds_drg_rate_n_label, 9, 0, 1, 1)
+        dds_ramp_layout.addWidget(self.dds_drg_rate_n_textbox, 9, 2, 1, 1)
+
+        dds_ramp_layout.addWidget(self.dds_drg_rate_n_slider, 10, 0, 1, 3)
+
+        dds_ramp_layout.addWidget(self.dds_drg_rate_p_label, 11, 0, 1, 1)
+        dds_ramp_layout.addWidget(self.dds_drg_rate_p_textbox, 11, 2, 1, 1)
+
+        dds_ramp_layout.addWidget(self.dds_drg_rate_p_slider, 12, 0, 1, 3)
 
 
         # Adds the DDS sub-frames to the main frame
         dds_layout.addWidget(self.dds_title, 0, 0, 1, 1)
-        dds_layout.addWidget(self.drg_select_checkbox, 0, 1, 1, 1)
         dds_layout.addWidget(dds_single_frame, 1, 0, 1, 1)
         dds_layout.addWidget(dds_ramp_frame, 1, 1, 1, 1)
-        dds_layout.addWidget(self.dds_load_button, 2, 0, 1, 2)
 
         # Adds the frames to the main window
         layout.addWidget(dds_frame, 0, 0, 1, 1)
@@ -484,7 +494,7 @@ class Application(QWidget):
         new_rate = float(self.dds_drg_rate_n_textbox.text()) / self.dds_drg_microseconds
         reference = self.dds_drg_rate_limit / self.dds_drg_rate_iterator
 
-        if new_rate > reference or new_rate < 0:
+        if new_rate > reference or new_rate < min(self.dds_drg_rate_range) / self.dds_drg_rate_iterator:
             box = QMessageBox()
             box.setIcon(QMessageBox.Warning)
             box.setText('Bad Input:')
@@ -505,7 +515,7 @@ class Application(QWidget):
         new_rate = float(self.dds_drg_rate_p_textbox.text()) / self.dds_drg_microseconds
         reference = self.dds_drg_rate_limit / self.dds_drg_rate_iterator
 
-        if new_rate > reference or new_rate < 0:
+        if new_rate > reference or new_rate < min(self.dds_drg_rate_range) / self.dds_drg_rate_iterator:
             box = QMessageBox()
             box.setIcon(QMessageBox.Warning)
             box.setText('Bad Input:')
@@ -522,17 +532,46 @@ class Application(QWidget):
         # Not cutting at a certain number of decimals because this number is gonna be super small
         self.dds_drg_rate_p_textbox.setText(str(float((self.dds_drg_rate_p_slider.value() / self.dds_drg_rate_iterator) * self.dds_drg_microseconds)))
 
+    # IMPORTANT: TECHNICALLY YOU CAN MAKE THE START AND STOP BE OUT OF ORDER WHICH IS INVALID, SO MAKE SURE TO CHECK FOR
+    #   THAT AND ACCOUNT FOR IT, EITHER HERE OR WHEN LOADING
     def update_start_textbox(self):
-        pass
+        new_limit = float(self.dds_drg_start_textbox.text())
+        reference = self.dds_drg_start_stop_max
+
+        if new_limit > reference or new_limit < min(self.dds_drg_start_stop_range) / self.dds_drg_start_stop_iterator:
+            box = QMessageBox()
+            box.setIcon(QMessageBox.Warning)
+            box.setText('Bad Input:')
+            box.setInformativeText('Chosen start out of range.')
+            box.setStandardButtons(QMessageBox.Ok)
+            box.exec_()
+            self.dds_drg_start_textbox.setText(str(float(self.dds_drg_start_slider.value() / self.dds_drg_start_stop_iterator)))
+            return
+
+        self.dds_drg_start_slider.setValue(int(new_limit * self.dds_drg_start_stop_iterator))
 
     def update_start_slider(self):
-        pass
+        self.dds_drg_start_textbox.setText(str(float(self.dds_drg_start_slider.value() / self.dds_drg_start_stop_iterator)))
 
     def update_stop_textbox(self):
-        pass
+        new_limit = float(self.dds_drg_stop_textbox.text())
+        reference = self.dds_drg_start_stop_max
+
+        if new_limit > reference or new_limit < min(self.dds_drg_start_stop_range) / self.dds_drg_start_stop_iterator:
+            box = QMessageBox()
+            box.setIcon(QMessageBox.Warning)
+            box.setText('Bad Input:')
+            box.setInformativeText('Chosen stop out of range.')
+            box.setStandardButtons(QMessageBox.Ok)
+            box.exec_()
+            self.dds_drg_stop_textbox.setText(
+                str(float(self.dds_drg_stop_slider.value() / self.dds_drg_start_stop_iterator)))
+            return
+
+        self.dds_drg_stop_slider.setValue(int(new_limit * self.dds_drg_start_stop_iterator))
 
     def update_stop_slider(self):
-        pass
+        self.dds_drg_stop_textbox.setText(str(float(self.dds_drg_stop_slider.value() / self.dds_drg_start_stop_iterator)))
 
     def update_frequency_slider(self):
         self.dds_frequency_textbox.setText("%.3f" % (self.dds_frequency_slider.value() / self.dds_frequency_iterator))
@@ -541,7 +580,7 @@ class Application(QWidget):
         new_frequency = float(self.dds_frequency_textbox.text())
         reference = self.dds_max_frequency
 
-        if new_frequency > reference or new_frequency < 0:
+        if new_frequency > reference or new_frequency < min(self.dds_frequency_range) / self.dds_frequency_iterator:
             box = QMessageBox()
             box.setIcon(QMessageBox.Warning)
             box.setText('Bad Input:')
@@ -553,6 +592,7 @@ class Application(QWidget):
 
         self.dds_frequency_slider.setValue(new_frequency * self.dds_frequency_iterator)
 
+    # Needs to update everything in the DRG still
     def update_freq_sysclk(self):
         if float(self.dds_freq_sysclk_textbox.text()) < 1/self.dds_frequency_iterator:
             self.dds_max_frequency = float(1/self.dds_frequency_iterator)
@@ -565,6 +605,24 @@ class Application(QWidget):
         self.dds_frequency_slider.setValue(0)
         self.dds_frequency_textbox.setText("%.3f" % 0.0)
 
+        # Stuff on the DRG side
+        self.dds_drg_rate_iterator = self.dds_max_frequency / 4
+
+        self.dds_drg_rate_n_slider.setValue(min(self.dds_drg_rate_range))
+        self.dds_drg_rate_p_slider.setValue(min(self.dds_drg_rate_range))
+        self.dds_drg_rate_n_textbox.setText(str(float(0.0)))
+        self.dds_drg_rate_p_textbox.setText(str(float(0.0)))
+
+        # if self.dds_drg_parameter_select.currentText() == self.dds_drg_parameters[0]:
+        self.dds_drg_start_stop_max = self.dds_max_frequency
+        self.dds_drg_start_stop_range = range(0, int(self.dds_drg_start_stop_max * self.dds_drg_start_stop_iterator))
+        self.dds_drg_start_slider.setRange(min(self.dds_drg_start_stop_range), max(self.dds_drg_start_stop_range))
+        self.dds_drg_start_slider.setValue(min(self.dds_drg_start_stop_range))
+        self.dds_drg_start_textbox.setText(str(float(0.0)))
+        self.dds_drg_stop_slider.setRange(min(self.dds_drg_start_stop_range), max(self.dds_drg_start_stop_range))
+        self.dds_drg_stop_slider.setValue(min(self.dds_drg_start_stop_range))
+        self.dds_drg_stop_textbox.setText(str(float(0.0)))
+
     def update_phase_slider(self):
         self.dds_phase_textbox.setText("%.5f" % (self.dds_phase_slider.value() / self.dds_phase_iterator))
 
@@ -572,7 +630,7 @@ class Application(QWidget):
         new_phase = float(self.dds_phase_textbox.text())
         reference = self.dds_max_phase
 
-        if new_phase > reference or new_phase < 0:
+        if new_phase > reference or new_phase < min(self.dds_phase_range) / self.dds_phase_iterator:
             box = QMessageBox()
             box.setIcon(QMessageBox.Warning)
             box.setText('Bad Input:')
@@ -591,7 +649,7 @@ class Application(QWidget):
         new_amplitude = float(self.dds_amplitude_textbox.text())
         reference = self.dds_max_amplitude
 
-        if new_amplitude > reference or new_amplitude < 0:
+        if new_amplitude > reference or new_amplitude < min(self.dds_amplitude_range) / self.dds_amplitude_iterator:
             box = QMessageBox()
             box.setIcon(QMessageBox.Warning)
             box.setText('Bad Input:')
