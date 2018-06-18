@@ -157,7 +157,7 @@ class Application(QWidget):
         self.drg_enabled = False
 
         # Single Tone Sliders
-        self.dds_max_frequency = 1<<30   # kind of arbitrary here so it means the slider wont be as precise; program
+        self.dds_max_frequency = 1 << 30   # kind of arbitrary here so it means the slider wont be as precise; program
         self.dds_frequency_iterator = 0.01     # is way too slow if I give the proper slider precision (textbox is fine)
         self.dds_frequency_range = range(0, int(self.dds_frequency_iterator*self.dds_max_frequency))
 
@@ -272,30 +272,30 @@ class Application(QWidget):
         self.dds_drg_increment_slider.sliderReleased.connect(self.update_increment_slider)
 
         # WTF DO I DO HERE
-        self.dds_drg_rate_limit = 1
-        self.dds_drg_rate_iterator = 1
-        self.dds_drg_rate_range = [0, 1]
+        self.dds_drg_rate_limit = 1 << 16
+        self.dds_drg_rate_iterator = self.dds_max_frequency / 4
+        self.dds_drg_rate_range = range(0, self.dds_drg_rate_limit)
+        self.dds_drg_microseconds = 10**6
 
         self.dds_drg_rate_n_label = QLabel()
-        self.dds_drg_rate_n_label.setText('Rate -')
+        self.dds_drg_rate_n_label.setText('-Rate (us/step)')
         self.dds_drg_rate_n_textbox = QLineEdit()
         self.dds_drg_rate_n_textbox.setText("%.5f" % 0.0)
         self.dds_drg_rate_n_textbox.returnPressed.connect(self.update_rate_n_textbox)
         self.dds_drg_rate_n_slider = QSlider(Qt.Horizontal)
         self.dds_drg_rate_n_slider.setRange(min(self.dds_drg_rate_range), max(self.dds_drg_rate_range))
-        self.dds_drg_rate_n_slider.setValue(max(self.dds_drg_rate_range))
+        self.dds_drg_rate_n_slider.setValue(min(self.dds_drg_rate_range))
         self.dds_drg_rate_n_slider.sliderReleased.connect(self.update_rate_n_slider)
 
         self.dds_drg_rate_p_label = QLabel()
-        self.dds_drg_rate_p_label.setText('Rate +')
+        self.dds_drg_rate_p_label.setText('+Rate (us/step)')
         self.dds_drg_rate_p_textbox = QLineEdit()
         self.dds_drg_rate_p_textbox.setText("%.5f" % 0.0)
         self.dds_drg_rate_p_textbox.returnPressed.connect(self.update_rate_p_textbox)
         self.dds_drg_rate_p_slider = QSlider(Qt.Horizontal)
         self.dds_drg_rate_p_slider.setRange(min(self.dds_drg_rate_range), max(self.dds_drg_rate_range))
-        self.dds_drg_rate_p_slider.setValue(max(self.dds_drg_rate_range))
+        self.dds_drg_rate_p_slider.setValue(min(self.dds_drg_rate_range))
         self.dds_drg_rate_p_slider.sliderReleased.connect(self.update_rate_p_slider)
-
 
         # Textbox validators
         self.dds_freq_sysclk_textbox.setValidator(self.only_double)
@@ -424,6 +424,16 @@ class Application(QWidget):
 
         dds_ramp_layout.addWidget(self.dds_drg_stop_slider, 4, 0, 1, 3)
 
+        dds_ramp_layout.addWidget(self.dds_drg_rate_n_label, 5, 0, 1, 1)
+        dds_ramp_layout.addWidget(self.dds_drg_rate_n_textbox, 5, 2, 1, 1)
+
+        dds_ramp_layout.addWidget(self.dds_drg_rate_n_slider, 6, 0, 1, 3)
+
+        dds_ramp_layout.addWidget(self.dds_drg_rate_p_label, 7, 0, 1, 1)
+        dds_ramp_layout.addWidget(self.dds_drg_rate_p_textbox, 7, 2, 1, 1)
+
+        dds_ramp_layout.addWidget(self.dds_drg_rate_p_slider, 8, 0, 1, 3)
+
 
         # Adds the DDS sub-frames to the main frame
         dds_layout.addWidget(self.dds_title, 0, 0, 1, 1)
@@ -471,16 +481,46 @@ class Application(QWidget):
         pass
 
     def update_rate_n_textbox(self):
-        pass
+        new_rate = float(self.dds_drg_rate_n_textbox.text()) / self.dds_drg_microseconds
+        reference = self.dds_drg_rate_limit / self.dds_drg_rate_iterator
+
+        if new_rate > reference or new_rate < 0:
+            box = QMessageBox()
+            box.setIcon(QMessageBox.Warning)
+            box.setText('Bad Input:')
+            box.setInformativeText('Chosen rate out of range.')
+            box.setStandardButtons(QMessageBox.Ok)
+            box.exec_()
+            self.dds_drg_rate_n_textbox.setText(str(
+                float((self.dds_drg_rate_n_slider.value() / self.dds_drg_rate_iterator) * self.dds_drg_microseconds)))
+            return
+
+        self.dds_drg_rate_n_slider.setValue(int(new_rate * self.dds_drg_rate_iterator))
 
     def update_rate_n_slider(self):
-        pass
+        # Not cutting at a certain number of decimals because this number is gonna be super small
+        self.dds_drg_rate_n_textbox.setText(str(float((self.dds_drg_rate_n_slider.value() / self.dds_drg_rate_iterator) * self.dds_drg_microseconds)))
 
     def update_rate_p_textbox(self):
-        pass
+        new_rate = float(self.dds_drg_rate_p_textbox.text()) / self.dds_drg_microseconds
+        reference = self.dds_drg_rate_limit / self.dds_drg_rate_iterator
+
+        if new_rate > reference or new_rate < 0:
+            box = QMessageBox()
+            box.setIcon(QMessageBox.Warning)
+            box.setText('Bad Input:')
+            box.setInformativeText('Chosen rate out of range.')
+            box.setStandardButtons(QMessageBox.Ok)
+            box.exec_()
+            self.dds_drg_rate_p_textbox.setText(str(
+                float((self.dds_drg_rate_p_slider.value() / self.dds_drg_rate_iterator) * self.dds_drg_microseconds)))
+            return
+
+        self.dds_drg_rate_p_slider.setValue(int(new_rate * self.dds_drg_rate_iterator))
 
     def update_rate_p_slider(self):
-        pass
+        # Not cutting at a certain number of decimals because this number is gonna be super small
+        self.dds_drg_rate_p_textbox.setText(str(float((self.dds_drg_rate_p_slider.value() / self.dds_drg_rate_iterator) * self.dds_drg_microseconds)))
 
     def update_start_textbox(self):
         pass
