@@ -301,12 +301,37 @@ class Application(QWidget):
         self.dds_drg_rate_p_slider.setValue(min(self.dds_drg_rate_range))
         self.dds_drg_rate_p_slider.sliderReleased.connect(self.update_rate_p_slider)
 
+        # Initialization disables for DRG stuff
+        self.dds_drg_parameter_select.setDisabled(True)
+
+        self.dds_drg_start_textbox.setDisabled(True)
+        self.dds_drg_stop_textbox.setDisabled(True)
+        self.dds_drg_start_slider.setDisabled(True)
+        self.dds_drg_stop_slider.setDisabled(True)
+
+        self.dds_drg_decrement_textbox.setDisabled(True)
+        self.dds_drg_increment_textbox.setDisabled(True)
+        self.dds_drg_decrement_slider.setDisabled(True)
+        self.dds_drg_increment_slider.setDisabled(True)
+
+        self.dds_drg_rate_n_textbox.setDisabled(True)
+        self.dds_drg_rate_p_textbox.setDisabled(True)
+        self.dds_drg_rate_n_slider.setDisabled(True)
+        self.dds_drg_rate_p_slider.setDisabled(True)
+
         # Textbox validators
         self.dds_freq_sysclk_textbox.setValidator(self.only_double)
         self.dds_frequency_textbox.setValidator(self.only_double)
         self.dds_phase_textbox.setValidator(self.only_double)
         self.dds_amplitude_ref_textbox.setValidator(self.only_double)
         self.dds_amplitude_textbox.setValidator(self.only_double)
+
+        self.dds_drg_start_textbox.setValidator(self.only_double)
+        self.dds_drg_stop_textbox.setValidator(self.only_double)
+        self.dds_drg_decrement_textbox.setValidator(self.only_double)
+        self.dds_drg_increment_textbox.setValidator(self.only_double)
+        self.dds_drg_rate_n_textbox.setValidator(self.only_double)
+        self.dds_drg_rate_p_textbox.setValidator(self.only_double)
 
         #############
         # EXECUTION #
@@ -479,7 +504,65 @@ class Application(QWidget):
             controller.load()
 
     def drg_toggle(self):
-        pass
+
+        if self.drg_select_checkbox.isChecked():
+            self.drg_enabled = True
+
+            if self.dds_drg_parameter_select.currentIndex() == 0:
+                self.dds_frequency_slider.setDisabled(True)
+                self.dds_frequency_textbox.setDisabled(True)
+
+            elif self.dds_drg_parameter_select.currentIndex() == 1:
+                self.dds_phase_slider.setDisabled(True)
+                self.dds_phase_textbox.setDisabled(True)
+
+            elif self.dds_drg_parameter_select.currentIndex() == 2:
+                self.dds_amplitude_slider.setDisabled(True)
+                self.dds_amplitude_textbox.setDisabled(True)
+
+            self.dds_drg_parameter_select.setDisabled(False)
+
+            self.dds_drg_start_textbox.setDisabled(False)
+            self.dds_drg_stop_textbox.setDisabled(False)
+            self.dds_drg_start_slider.setDisabled(False)
+            self.dds_drg_stop_slider.setDisabled(False)
+
+            self.dds_drg_decrement_textbox.setDisabled(False)
+            self.dds_drg_increment_textbox.setDisabled(False)
+            self.dds_drg_decrement_slider.setDisabled(False)
+            self.dds_drg_increment_slider.setDisabled(False)
+
+            self.dds_drg_rate_n_textbox.setDisabled(False)
+            self.dds_drg_rate_p_textbox.setDisabled(False)
+            self.dds_drg_rate_n_slider.setDisabled(False)
+            self.dds_drg_rate_p_slider.setDisabled(False)
+
+        else:
+            self.dds_frequency_slider.setDisabled(False)
+            self.dds_frequency_textbox.setDisabled(False)
+            self.dds_phase_slider.setDisabled(False)
+            self.dds_phase_textbox.setDisabled(False)
+            self.dds_amplitude_slider.setDisabled(False)
+            self.dds_amplitude_textbox.setDisabled(False)
+
+            self.drg_enabled = False
+
+            self.dds_drg_parameter_select.setDisabled(True)
+
+            self.dds_drg_start_textbox.setDisabled(True)
+            self.dds_drg_stop_textbox.setDisabled(True)
+            self.dds_drg_start_slider.setDisabled(True)
+            self.dds_drg_stop_slider.setDisabled(True)
+
+            self.dds_drg_decrement_textbox.setDisabled(True)
+            self.dds_drg_increment_textbox.setDisabled(True)
+            self.dds_drg_decrement_slider.setDisabled(True)
+            self.dds_drg_increment_slider.setDisabled(True)
+
+            self.dds_drg_rate_n_textbox.setDisabled(True)
+            self.dds_drg_rate_p_textbox.setDisabled(True)
+            self.dds_drg_rate_n_slider.setDisabled(True)
+            self.dds_drg_rate_p_slider.setDisabled(True)
 
     def update_drg_parameter(self):
         pass
