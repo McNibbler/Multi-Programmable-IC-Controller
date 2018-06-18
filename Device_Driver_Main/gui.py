@@ -141,9 +141,13 @@ class Application(QWidget):
         # DDS SIDE #
         ############
 
-        # Label for the DAC controller
+        # Label for the DDS controller
         self.dds_title = QLabel()
         self.dds_title.setText('AD9910 DDS Controller')
+
+        # Label for the DDS DRG controller
+        self.dds_drg_title = QLabel()
+        self.dds_drg_title.setText('DDS DRG Settings')
 
         # Load data to the dds
         self.dds_load_button = QPushButton('Load to DDS')
@@ -395,21 +399,22 @@ class Application(QWidget):
         dds_single_layout.addWidget(self.dds_frequency_slider, 3, 0, 1, 4)
 
         dds_single_layout.addWidget(self.dds_phase_label, 4, 0, 1, 2)
-        dds_single_layout.addWidget(self.dds_desire_phase_label, 4, 2, 1, 1)
-        dds_single_layout.addWidget(self.dds_phase_textbox, 4, 3, 1, 1)
 
-        dds_single_layout.addWidget(self.dds_phase_slider, 5, 0, 1, 4)
+        dds_single_layout.addWidget(self.dds_desire_phase_label, 5, 2, 1, 1)
+        dds_single_layout.addWidget(self.dds_phase_textbox, 5, 3, 1, 1)
 
-        dds_single_layout.addWidget(self.dds_amplitude_label, 6, 0, 1, 2)
+        dds_single_layout.addWidget(self.dds_phase_slider, 6, 0, 1, 4)
 
-        dds_single_layout.addWidget(self.dds_amplitude_ref_label, 7, 0, 1, 1)
-        dds_single_layout.addWidget(self.dds_amplitude_ref_textbox, 7, 1, 1, 1)
-        dds_single_layout.addWidget(self.dds_desire_amp_label, 7, 2, 1, 1)
-        dds_single_layout.addWidget(self.dds_amplitude_textbox, 7, 3, 1, 1)
+        dds_single_layout.addWidget(self.dds_amplitude_label, 7, 0, 1, 2)
 
-        dds_single_layout.addWidget(self.dds_amplitude_slider, 8, 0, 1, 4)
+        dds_single_layout.addWidget(self.dds_amplitude_ref_label, 8, 0, 1, 1)
+        dds_single_layout.addWidget(self.dds_amplitude_ref_textbox, 8, 1, 1, 1)
+        dds_single_layout.addWidget(self.dds_desire_amp_label, 8, 2, 1, 1)
+        dds_single_layout.addWidget(self.dds_amplitude_textbox, 8, 3, 1, 1)
 
-        dds_single_layout.addWidget(self.dds_load_button, 9, 0, 1, 4)
+        dds_single_layout.addWidget(self.dds_amplitude_slider, 9, 0, 1, 4)
+
+        dds_single_layout.addWidget(self.dds_load_button, 10, 0, 1, 4)
 
         # Single Tone half of frame
         dds_ramp_frame = QFrame()
@@ -449,6 +454,7 @@ class Application(QWidget):
 
         # Adds the DDS sub-frames to the main frame
         dds_layout.addWidget(self.dds_title, 0, 0, 1, 1)
+        dds_layout.addWidget(self.dds_drg_title, 0, 1, 1, 1)
         dds_layout.addWidget(dds_single_frame, 1, 0, 1, 1)
         dds_layout.addWidget(dds_ramp_frame, 1, 1, 1, 1)
 
