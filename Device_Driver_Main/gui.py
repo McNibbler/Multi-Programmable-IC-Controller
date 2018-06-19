@@ -493,7 +493,56 @@ class Application(QWidget):
 
     def dds_load(self):
         if self.drg_enabled:
-            pass
+
+            index = self.dds_drg_parameter_select.currentIndex()
+
+            parameter = 'f'
+
+            frequency = 0
+            phase = 0
+            amplitude = 0
+
+            if index == 0:
+                parameter = 'f'
+                phase = float(self.dds_phase_textbox.text())
+                amplitude = float(self.dds_amplitude_textbox.text())
+            elif index == 1:
+                parameter = 'p'
+                frequency = float(self.dds_frequency_textbox.text())
+                amplitude = float(self.dds_amplitude_textbox.text())
+            elif index == 2:
+                parameter = 'a'
+                phase = float(self.dds_phase_textbox.text())
+                frequency = float(self.dds_frequency_textbox.text())
+
+            start = float(self.dds_drg_start_textbox.text())
+            stop = float(self.dds_drg_stop_textbox.text())
+            decrement = float(self.dds_drg_decrement_textbox.text())
+            increment = float(self.dds_drg_increment_textbox.text())
+            rate_n = float(self.dds_drg_rate_n_textbox.text()) / self.dds_drg_microseconds
+            rate_p = float(self.dds_drg_rate_p_textbox.text()) / self.dds_drg_microseconds
+
+            ref_amplitude = float(self.dds_amplitude_ref_textbox.text())
+            freq_sysclk = float(self.dds_freq_sysclk_textbox.text())
+
+            box = QMessageBox()
+            box.setIcon(QMessageBox.Warning)
+            box.setText('Error Loading:')
+            if start >= stop:
+                box.setInformativeText('Stop can not be less than or equal to start')
+                box.setStandardButtons(QMessageBox.Ok)
+                box.exec_()
+                return
+
+            if rate_n == 0 or rate_p == 0:
+                box.setInformativeText('Rate can not be 0.')
+                box.setStandardButtons(QMessageBox.Ok)
+                box.exec_()
+                return
+
+            controller.send_ramp_setup(parameter, freq_sysclk, ref_amplitude, start, stop, decrement, increment, rate_n, rate_p)
+            controller.send_ramp_parameters(amplitude, ref_amplitude, phase, frequency, freq_sysclk)
+            controller.load()
         else:
             amplitude = float(self.dds_amplitude_textbox.text())
             amplitude_ref = float(self.dds_amplitude_ref_textbox.text())
@@ -630,7 +679,6 @@ class Application(QWidget):
         self.dds_drg_increment_slider.setRange(min(self.dds_drg_decrement_increment_range), max(self.dds_drg_decrement_increment_range))
         self.dds_drg_increment_slider.setValue(0)
         self.dds_drg_increment_textbox.setText("%.5f" % 0.0)
-
 
     def update_decrement_textbox(self):
         new_step = float(self.dds_drg_decrement_textbox.text())

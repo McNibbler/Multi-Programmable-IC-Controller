@@ -65,8 +65,8 @@ def send_ramp_parameters(amplitude: float, ref_amplitude: float, phase: float, f
 
 
 # Sends the command to set up the DRG for the desired parameter
-def send_ramp_setup(parameter: chr, start, stop, decrement, increment, rate_n, rate_p):
-    send_command(DDS.create_ramp_setup_command(parameter, start, stop, decrement, increment, rate_n, rate_p))
+def send_ramp_setup(parameter: chr, sysclk, reference, start, stop, decrement, increment, rate_n, rate_p):
+    send_command(DDS.create_ramp_setup_command(parameter, sysclk, reference, start, stop, decrement, increment, rate_n, rate_p))
 
 
 #######
@@ -102,4 +102,6 @@ def set_com(port: str):
 # Testing stuff that doesn't normally get run cus it's a library
 if __name__ == '__main__':
 
-    pass
+    # Test command because this wasn't working
+    send_ramp_setup('f', 360, 1, 0, 360, 1, 1, 0.0000005, 0.0000005)
+

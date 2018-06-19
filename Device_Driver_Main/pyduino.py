@@ -216,9 +216,9 @@ class DDS:
         return disable_command
 
     @staticmethod
-    def create_ramp_setup_command(parameter: chr, start, stop, decrement, increment, rate_n, rate_p):
+    def create_ramp_setup_command(parameter: chr, sysclk, reference, start, stop, decrement, increment, rate_n, rate_p):
         working_string = str(DDS_INDICATOR + DDS_OUTPUT + DDS_RAMP + DDS_RAMP_SETUP)
-        ramp_setup = DDS.create_ramp_setup_string(parameter, start, stop, decrement, increment, rate_n, rate_p)
+        ramp_setup = DDS.create_ramp_setup_string(parameter, sysclk, reference, start, stop, decrement, increment, rate_n, rate_p)
         working_string = str(working_string + ramp_setup)
         working_string = str(working_string + DONE)
         return working_string
@@ -242,17 +242,17 @@ class DDS:
         drg_rate_p = DDS.calculate_full_scale_binary(16, 1 / rate_p, sysclk / 4)
 
         working_string = parameter
-        working_string = str(working_string + drg_lower_limit)
+        working_string = str(working_string + str(drg_lower_limit))
         working_string = str(working_string + ',')
-        working_string = str(working_string + drg_upper_limit)
+        working_string = str(working_string + str(drg_upper_limit))
         working_string = str(working_string + ',')
-        working_string = str(working_string + drg_decrement)
+        working_string = str(working_string + str(drg_decrement))
         working_string = str(working_string + ',')
-        working_string = str(working_string + drg_increment)
+        working_string = str(working_string + str(drg_increment))
         working_string = str(working_string + ',')
-        working_string = str(working_string + drg_rate_n)
+        working_string = str(working_string + str(drg_rate_n))
         working_string = str(working_string + ',')
-        working_string = str(working_string + drg_rate_p)
+        working_string = str(working_string + str(drg_rate_p))
 
         return working_string
 
