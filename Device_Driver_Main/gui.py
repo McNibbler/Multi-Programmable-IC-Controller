@@ -262,7 +262,7 @@ class Application(QWidget):
         self.dds_drg_decrement_textbox.returnPressed.connect(self.update_decrement_textbox)
         self.dds_drg_decrement_slider = QSlider(Qt.Horizontal)
         self.dds_drg_decrement_slider.setRange(min(self.dds_drg_decrement_increment_range), max(self.dds_drg_decrement_increment_range))
-        self.dds_drg_decrement_slider.setValue(max(self.dds_drg_decrement_increment_range))
+        self.dds_drg_decrement_slider.setValue(min(self.dds_drg_decrement_increment_range))
         self.dds_drg_decrement_slider.sliderReleased.connect(self.update_decrement_slider)
 
         self.dds_drg_increment_label = QLabel()
@@ -272,7 +272,7 @@ class Application(QWidget):
         self.dds_drg_increment_textbox.returnPressed.connect(self.update_increment_textbox)
         self.dds_drg_increment_slider = QSlider(Qt.Horizontal)
         self.dds_drg_increment_slider.setRange(min(self.dds_drg_decrement_increment_range), max(self.dds_drg_decrement_increment_range))
-        self.dds_drg_increment_slider.setValue(max(self.dds_drg_decrement_increment_range))
+        self.dds_drg_increment_slider.setValue(min(self.dds_drg_decrement_increment_range))
         self.dds_drg_increment_slider.sliderReleased.connect(self.update_increment_slider)
 
         # WTF DO I DO HERE
@@ -570,16 +570,42 @@ class Application(QWidget):
         pass
 
     def update_decrement_textbox(self):
-        pass
+        new_step = float(self.dds_drg_decrement_textbox.text())
+        reference = self.dds_drg_decrement_increment_max
+
+        if new_step > reference or new_step < min(self.dds_drg_decrement_increment_range) / self.dds_drg_decrement_increment_iterator:
+            box = QMessageBox()
+            box.setIcon(QMessageBox.Warning)
+            box.setText('Bad Input:')
+            box.setInformativeText('Chosen step size out of range.')
+            box.setStandardButtons(QMessageBox.Ok)
+            box.exec_()
+            self.dds_drg_decrement_textbox.setText(str(float(self.dds_drg_decrement_slider.value() / self.dds_drg_decrement_increment_iterator)))
+            return
+
+        self.dds_drg_decrement_slider.setValue(int(new_step * self.dds_drg_decrement_increment_iterator))
 
     def update_decrement_slider(self):
-        pass
+        self.dds_drg_decrement_textbox.setText(str(float(self.dds_drg_decrement_slider.value() / self.dds_drg_decrement_increment_iterator)))
 
     def update_increment_textbox(self):
-        pass
+        new_step = float(self.dds_drg_increment_textbox.text())
+        reference = self.dds_drg_decrement_increment_max
+
+        if new_step > reference or new_step < min(self.dds_drg_decrement_increment_range) / self.dds_drg_decrement_increment_iterator:
+            box = QMessageBox()
+            box.setIcon(QMessageBox.Warning)
+            box.setText('Bad Input:')
+            box.setInformativeText('Chosen step size out of range.')
+            box.setStandardButtons(QMessageBox.Ok)
+            box.exec_()
+            self.dds_drg_increment_textbox.setText(str(float(self.dds_drg_increment_slider.value() / self.dds_drg_decrement_increment_iterator)))
+            return
+
+        self.dds_drg_increment_slider.setValue(int(new_step * self.dds_drg_decrement_increment_iterator))
 
     def update_increment_slider(self):
-        pass
+        self.dds_drg_increment_textbox.setText(str(float(self.dds_drg_increment_slider.value() / self.dds_drg_decrement_increment_iterator)))
 
     def update_rate_n_textbox(self):
         new_rate = float(self.dds_drg_rate_n_textbox.text()) / self.dds_drg_microseconds
