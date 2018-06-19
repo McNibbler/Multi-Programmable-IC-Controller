@@ -371,34 +371,37 @@ class Application(QWidget):
 
         # dac_frame.setFixedSize(300, 275)
 
-        dac_layout.addWidget(self.dac_title, 0, 0, 1, 3)
+        dac_layout.addWidget(self.com_select, 0, 0, 1, 3)
+        dac_layout.addWidget(self.status_text, 0, 3, 1, 1)
 
-        dac_layout.addWidget(self.status_text, 1, 0, 1, 1)
-        dac_layout.addWidget(self.com_select, 1, 1, 1, 1)
-        dac_layout.addWidget(self.bipolar_checkbox, 1, 2, 1, 1)
-        dac_layout.addWidget(self.connect_sliders_checkbox, 1, 3, 1, 1)
+        dac_layout.addWidget(self.dac_title, 1, 0, 1, 3)
 
-        dac_layout.addWidget(self.reference_label, 2, 0, 1, 1)
-        dac_layout.addWidget(self.reference_textbox, 2, 1, 1, 1)
-        dac_layout.addWidget(self.gain_label, 2, 2, 1, 1)
-        dac_layout.addWidget(self.gain_select, 2, 3, 1, 1)
+        dac_layout.addWidget(self.bipolar_checkbox, 2, 0, 1, 2)
+        dac_layout.addWidget(self.connect_sliders_checkbox, 2, 3, 1, 2)
 
-        dac_layout.addWidget(self.setup_button, 3, 0, 1, 4)
+        dac_layout.addWidget(self.reference_label, 3, 0, 1, 1)
+        dac_layout.addWidget(self.reference_textbox, 3, 1, 1, 1)
+        dac_layout.addWidget(self.gain_label, 3, 2, 1, 1)
+        dac_layout.addWidget(self.gain_select, 3, 3, 1, 1)
 
-        dac_layout.addWidget(self.voltage_label_a, 4, 0, 1, 3)
-        dac_layout.addWidget(self.voltage_textbox_a, 4, 3, 1, 1)
+        dac_layout.addWidget(self.setup_button, 4, 0, 1, 4)
 
-        dac_layout.addWidget(self.voltage_slider_a, 5, 0, 1, 4)
+        dac_layout.addWidget(self.voltage_label_a, 5, 0, 1, 3)
 
-        dac_layout.addWidget(self.voltage_label_b, 6, 0, 1, 3)
-        dac_layout.addWidget(self.voltage_textbox_b, 6, 3, 1, 1)
+        dac_layout.addWidget(self.voltage_textbox_a, 6, 3, 1, 1)
 
-        dac_layout.addWidget(self.voltage_slider_b, 7, 0, 1, 4)
+        dac_layout.addWidget(self.voltage_slider_a, 7, 0, 1, 4)
 
-        dac_layout.addWidget(self.readback_label, 8, 0, 1, 4)
+        dac_layout.addWidget(self.voltage_label_b, 8, 0, 1, 3)
 
-        dac_layout.addWidget(self.readback_a, 9, 0, 1, 2)
-        dac_layout.addWidget(self.readback_b, 9, 3, 1, 2)
+        dac_layout.addWidget(self.voltage_textbox_b, 9, 3, 1, 1)
+
+        dac_layout.addWidget(self.voltage_slider_b, 10, 0, 1, 4)
+
+        dac_layout.addWidget(self.readback_label, 11, 0, 1, 4)
+
+        dac_layout.addWidget(self.readback_a, 12, 0, 1, 2)
+        dac_layout.addWidget(self.readback_b, 12, 3, 1, 2)
 
         # Creates the DDS controller frame part of the GUI
         dds_frame = QFrame()
@@ -475,7 +478,6 @@ class Application(QWidget):
         dds_ramp_layout.addWidget(self.dds_drg_rate_p_textbox, 11, 2, 1, 1)
 
         dds_ramp_layout.addWidget(self.dds_drg_rate_p_slider, 12, 0, 1, 3)
-
 
         # Adds the DDS sub-frames to the main frame
         dds_layout.addWidget(self.dds_title, 0, 0, 1, 1)
