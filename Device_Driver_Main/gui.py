@@ -567,7 +567,70 @@ class Application(QWidget):
             self.dds_drg_rate_p_slider.setDisabled(True)
 
     def update_drg_parameter(self):
-        pass
+        index = self.dds_drg_parameter_select.currentIndex()
+        if index == 0:
+            # Frequency
+            self.dds_drg_start_stop_max = self.dds_max_frequency
+            self.dds_drg_start_stop_iterator = self.dds_frequency_iterator
+
+            self.dds_drg_decrement_increment_max = self.dds_max_frequency
+            self.dds_drg_decrement_increment_iterator = self.dds_frequency_iterator
+
+            self.dds_frequency_textbox.setDisabled(True)
+            self.dds_frequency_slider.setDisabled(True)
+            self.dds_phase_textbox.setDisabled(False)
+            self.dds_phase_slider.setDisabled(False)
+            self.dds_amplitude_textbox.setDisabled(False)
+            self.dds_amplitude_slider.setDisabled(False)
+
+        elif index == 1:
+            # Phase
+            self.dds_drg_start_stop_max = self.dds_max_phase
+            self.dds_drg_start_stop_iterator = self.dds_phase_iterator
+
+            self.dds_drg_decrement_increment_max = self.dds_max_phase
+            self.dds_drg_decrement_increment_iterator = self.dds_phase_iterator
+
+            self.dds_frequency_textbox.setDisabled(False)
+            self.dds_frequency_slider.setDisabled(False)
+            self.dds_phase_textbox.setDisabled(True)
+            self.dds_phase_slider.setDisabled(True)
+            self.dds_amplitude_textbox.setDisabled(False)
+            self.dds_amplitude_slider.setDisabled(False)
+
+        elif index == 2:
+            # Amplitude
+            self.dds_drg_start_stop_max = self.dds_max_amplitude
+            self.dds_drg_start_stop_iterator = self.dds_amplitude_iterator
+
+            self.dds_drg_decrement_increment_max = self.dds_max_amplitude
+            self.dds_drg_decrement_increment_iterator = self.dds_amplitude_iterator
+
+            self.dds_frequency_textbox.setDisabled(False)
+            self.dds_frequency_slider.setDisabled(False)
+            self.dds_phase_textbox.setDisabled(False)
+            self.dds_phase_slider.setDisabled(False)
+            self.dds_amplitude_textbox.setDisabled(True)
+            self.dds_amplitude_slider.setDisabled(True)
+
+        # Sets those rangeyboiss
+        self.dds_drg_start_stop_range = range(0, int(self.dds_drg_start_stop_max * self.dds_drg_start_stop_iterator))
+        self.dds_drg_decrement_increment_range = range(0, int(self.dds_drg_decrement_increment_max * self.dds_drg_decrement_increment_iterator))
+
+        self.dds_drg_start_slider.setRange(min(self.dds_drg_start_stop_range), max(self.dds_drg_start_stop_range))
+        self.dds_drg_start_slider.setValue(0)
+        self.dds_drg_start_textbox.setText("%.5f" % 0.0)
+        self.dds_drg_stop_slider.setRange(min(self.dds_drg_start_stop_range), max(self.dds_drg_start_stop_range))
+        self.dds_drg_stop_slider.setValue(0)
+        self.dds_drg_stop_textbox.setText("%.5f" % 0.0)
+
+        self.dds_drg_decrement_slider.setRange(min(self.dds_drg_decrement_increment_range), max(self.dds_drg_decrement_increment_range))
+        self.dds_drg_decrement_slider.setValue(0)
+        self.dds_drg_decrement_textbox.setText("%.5f" % 0.0)
+        self.dds_drg_increment_slider.setRange(min(self.dds_drg_decrement_increment_range), max(self.dds_drg_decrement_increment_range))
+        self.dds_drg_increment_slider.setValue(0)
+        self.dds_drg_increment_textbox.setText("%.5f" % 0.0)
+
 
     def update_decrement_textbox(self):
         new_step = float(self.dds_drg_decrement_textbox.text())
