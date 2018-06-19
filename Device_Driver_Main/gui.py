@@ -459,25 +459,25 @@ class Application(QWidget):
 
         dds_ramp_layout.addWidget(self.dds_drg_stop_slider, 4, 0, 1, 3)
 
-        dds_ramp_layout.addWidget(self.dds_drg_decrement_label, 5, 0, 1, 1)
-        dds_ramp_layout.addWidget(self.dds_drg_decrement_textbox, 5, 2, 1, 1)
+        dds_ramp_layout.addWidget(self.dds_drg_increment_label, 5, 0, 1, 1)
+        dds_ramp_layout.addWidget(self.dds_drg_increment_textbox, 5, 2, 1, 1)
 
-        dds_ramp_layout.addWidget(self.dds_drg_decrement_slider, 6, 0, 1, 3)
+        dds_ramp_layout.addWidget(self.dds_drg_increment_slider, 6, 0, 1, 3)
 
-        dds_ramp_layout.addWidget(self.dds_drg_increment_label, 7, 0, 1, 1)
-        dds_ramp_layout.addWidget(self.dds_drg_increment_textbox, 7, 2, 1, 1)
+        dds_ramp_layout.addWidget(self.dds_drg_decrement_label, 7, 0, 1, 1)
+        dds_ramp_layout.addWidget(self.dds_drg_decrement_textbox, 7, 2, 1, 1)
 
-        dds_ramp_layout.addWidget(self.dds_drg_increment_slider, 8, 0, 1, 3)
+        dds_ramp_layout.addWidget(self.dds_drg_decrement_slider, 8, 0, 1, 3)
 
-        dds_ramp_layout.addWidget(self.dds_drg_rate_n_label, 9, 0, 1, 1)
-        dds_ramp_layout.addWidget(self.dds_drg_rate_n_textbox, 9, 2, 1, 1)
+        dds_ramp_layout.addWidget(self.dds_drg_rate_p_label, 9, 0, 1, 1)
+        dds_ramp_layout.addWidget(self.dds_drg_rate_p_textbox, 9, 2, 1, 1)
 
-        dds_ramp_layout.addWidget(self.dds_drg_rate_n_slider, 10, 0, 1, 3)
+        dds_ramp_layout.addWidget(self.dds_drg_rate_p_slider, 10, 0, 1, 3)
 
-        dds_ramp_layout.addWidget(self.dds_drg_rate_p_label, 11, 0, 1, 1)
-        dds_ramp_layout.addWidget(self.dds_drg_rate_p_textbox, 11, 2, 1, 1)
+        dds_ramp_layout.addWidget(self.dds_drg_rate_n_label, 11, 0, 1, 1)
+        dds_ramp_layout.addWidget(self.dds_drg_rate_n_textbox, 11, 2, 1, 1)
 
-        dds_ramp_layout.addWidget(self.dds_drg_rate_p_slider, 12, 0, 1, 3)
+        dds_ramp_layout.addWidget(self.dds_drg_rate_n_slider, 12, 0, 1, 3)
 
         # Adds the DDS sub-frames to the main frame
         dds_layout.addWidget(self.dds_title, 0, 0, 1, 1)
@@ -506,14 +506,20 @@ class Application(QWidget):
                 parameter = 'f'
                 phase = float(self.dds_phase_textbox.text())
                 amplitude = float(self.dds_amplitude_textbox.text())
+
+                reference = float(self.dds_freq_sysclk_textbox.text())
             elif index == 1:
                 parameter = 'p'
                 frequency = float(self.dds_frequency_textbox.text())
                 amplitude = float(self.dds_amplitude_textbox.text())
+
+                reference = 360
             elif index == 2:
                 parameter = 'a'
                 phase = float(self.dds_phase_textbox.text())
                 frequency = float(self.dds_frequency_textbox.text())
+
+                reference = float(self.dds_amplitude_ref_textbox.text())
 
             start = float(self.dds_drg_start_textbox.text())
             stop = float(self.dds_drg_stop_textbox.text())
@@ -522,8 +528,8 @@ class Application(QWidget):
             rate_n = float(self.dds_drg_rate_n_textbox.text()) / self.dds_drg_microseconds
             rate_p = float(self.dds_drg_rate_p_textbox.text()) / self.dds_drg_microseconds
 
-            ref_amplitude = float(self.dds_amplitude_ref_textbox.text())
             freq_sysclk = float(self.dds_freq_sysclk_textbox.text())
+            ref_amplitude = float(self.dds_amplitude_ref_textbox.text())
 
             box = QMessageBox()
             box.setIcon(QMessageBox.Warning)
@@ -533,14 +539,13 @@ class Application(QWidget):
                 box.setStandardButtons(QMessageBox.Ok)
                 box.exec_()
                 return
-
-            if rate_n == 0 or rate_p == 0:
-                box.setInformativeText('Rate can not be 0.')
+            elif (stop - start) < increment or (stop - start) < decrement:
+                box.setInformativeText('Step increment sizes can not exceed difference between start and stop')
                 box.setStandardButtons(QMessageBox.Ok)
                 box.exec_()
                 return
 
-            controller.send_ramp_setup(parameter, freq_sysclk, ref_amplitude, start, stop, decrement, increment, rate_n, rate_p)
+            controller.send_ramp_setup(parameter, freq_sysclk, reference, start, stop, decrement, increment, rate_n, rate_p)
             controller.send_ramp_parameters(amplitude, ref_amplitude, phase, frequency, freq_sysclk)
             controller.load()
         else:
@@ -841,15 +846,25 @@ class Application(QWidget):
         self.dds_drg_rate_n_textbox.setText(str(float(0.0)))
         self.dds_drg_rate_p_textbox.setText(str(float(0.0)))
 
-        # if self.dds_drg_parameter_select.currentText() == self.dds_drg_parameters[0]:
-        self.dds_drg_start_stop_max = self.dds_max_frequency
-        self.dds_drg_start_stop_range = range(0, int(self.dds_drg_start_stop_max * self.dds_drg_start_stop_iterator))
-        self.dds_drg_start_slider.setRange(min(self.dds_drg_start_stop_range), max(self.dds_drg_start_stop_range))
-        self.dds_drg_start_slider.setValue(min(self.dds_drg_start_stop_range))
-        self.dds_drg_start_textbox.setText(str(float(0.0)))
-        self.dds_drg_stop_slider.setRange(min(self.dds_drg_start_stop_range), max(self.dds_drg_start_stop_range))
-        self.dds_drg_stop_slider.setValue(min(self.dds_drg_start_stop_range))
-        self.dds_drg_stop_textbox.setText(str(float(0.0)))
+        if self.dds_drg_parameter_select.currentIndex() == 0:
+            self.dds_drg_start_stop_max = self.dds_max_frequency
+            self.dds_drg_start_stop_range = range(0, int(self.dds_drg_start_stop_max * self.dds_drg_start_stop_iterator))
+            self.dds_drg_start_slider.setRange(min(self.dds_drg_start_stop_range), max(self.dds_drg_start_stop_range))
+            self.dds_drg_start_slider.setValue(min(self.dds_drg_start_stop_range))
+            self.dds_drg_start_textbox.setText(str(float(0.0)))
+            self.dds_drg_stop_slider.setRange(min(self.dds_drg_start_stop_range), max(self.dds_drg_start_stop_range))
+            self.dds_drg_stop_slider.setValue(min(self.dds_drg_start_stop_range))
+            self.dds_drg_stop_textbox.setText(str(float(0.0)))
+            self.dds_drg_stop_textbox.setText(str(float(0.0)))
+
+            self.dds_drg_decrement_increment_max = self.dds_max_frequency
+            self.dds_drg_decrement_increment_range = range(0, int(self.dds_drg_decrement_increment_max * self.dds_drg_decrement_increment_iterator))
+            self.dds_drg_decrement_slider.setRange(min(self.dds_drg_decrement_increment_range), max(self.dds_drg_decrement_increment_range))
+            self.dds_drg_decrement_slider.setValue(min(self.dds_drg_decrement_increment_range))
+            self.dds_drg_decrement_textbox.setText(str(float(0.0)))
+            self.dds_drg_increment_slider.setRange(min(self.dds_drg_decrement_increment_range), max(self.dds_drg_decrement_increment_range))
+            self.dds_drg_increment_slider.setValue(min(self.dds_drg_decrement_increment_range))
+            self.dds_drg_increment_textbox.setText(str(float(0.0)))
 
     def update_phase_slider(self):
         self.dds_phase_textbox.setText("%.5f" % (self.dds_phase_slider.value() / self.dds_phase_iterator))
@@ -900,6 +915,27 @@ class Application(QWidget):
         self.dds_amplitude_slider.setRange(min(self.dds_amplitude_range), max(self.dds_amplitude_range))
         self.dds_amplitude_slider.setValue(0)
         self.dds_amplitude_textbox.setText("%.5f" % 0.0)
+
+        if self.dds_drg_parameter_select.currentIndex() == 2:
+            self.dds_drg_start_stop_max = self.dds_max_amplitude
+            self.dds_drg_start_stop_range = range(0, int(self.dds_drg_start_stop_max * self.dds_drg_start_stop_iterator))
+            self.dds_drg_start_slider.setRange(min(self.dds_drg_start_stop_range), max(self.dds_drg_start_stop_range))
+            self.dds_drg_start_slider.setValue(min(self.dds_drg_start_stop_range))
+            self.dds_drg_start_textbox.setText(str(float(0.0)))
+            self.dds_drg_stop_slider.setRange(min(self.dds_drg_start_stop_range), max(self.dds_drg_start_stop_range))
+            self.dds_drg_stop_slider.setValue(min(self.dds_drg_start_stop_range))
+            self.dds_drg_stop_textbox.setText(str(float(0.0)))
+            self.dds_drg_stop_textbox.setText(str(float(0.0)))
+
+            self.dds_drg_decrement_increment_max = self.dds_max_amplitude
+            self.dds_drg_decrement_increment_range = range(0, int(self.dds_drg_decrement_increment_max * self.dds_drg_decrement_increment_iterator))
+            self.dds_drg_decrement_slider.setRange(min(self.dds_drg_decrement_increment_range), max(self.dds_drg_decrement_increment_range))
+            self.dds_drg_decrement_slider.setValue(min(self.dds_drg_decrement_increment_range))
+            self.dds_drg_decrement_textbox.setText(str(float(0.0)))
+            self.dds_drg_increment_slider.setRange(min(self.dds_drg_decrement_increment_range), max(self.dds_drg_decrement_increment_range))
+            self.dds_drg_increment_slider.setValue(min(self.dds_drg_decrement_increment_range))
+            self.dds_drg_increment_textbox.setText(str(float(0.0)))
+
 
     # Ties the two sliders together
     def tie_outputs(self):

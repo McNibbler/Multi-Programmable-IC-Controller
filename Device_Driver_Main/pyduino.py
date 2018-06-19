@@ -235,11 +235,11 @@ class DDS:
         drg_lower_limit = DDS.calculate_full_scale_binary(32, start, reference)
         drg_upper_limit = DDS.calculate_full_scale_binary(32, stop, reference)
 
-        drg_decrement = DDS.calculate_full_scale_binary(32, decrement, (drg_upper_limit - drg_lower_limit))
-        drg_increment = DDS.calculate_full_scale_binary(32, increment, (drg_upper_limit - drg_lower_limit))
+        drg_decrement = DDS.calculate_full_scale_binary(32, decrement, stop - start)
+        drg_increment = DDS.calculate_full_scale_binary(32, increment, stop - start)
 
-        drg_rate_n = DDS.calculate_full_scale_binary(16, 1 / rate_n, sysclk / 4)
-        drg_rate_p = DDS.calculate_full_scale_binary(16, 1 / rate_p, sysclk / 4)
+        drg_rate_n = DDS.calculate_full_scale_binary(16, rate_n, (4 / sysclk) * (1 << 16))
+        drg_rate_p = DDS.calculate_full_scale_binary(16, rate_p, (4 / sysclk) * (1 << 16))
 
         working_string = parameter
         working_string = str(working_string + str(drg_lower_limit))
