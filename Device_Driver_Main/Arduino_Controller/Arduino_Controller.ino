@@ -350,12 +350,11 @@ void DDScommand(QueueArray <uint8_t> &command){
 
 }
 
-
 // Loads the data from the buffers into the active registers
 //  Timing here is arbitrary, but follow figure 49 for appropriate timing and the minimum number of cycles on SYNC_CLK to ensure that it will load properly.
 //  The Arduino is much, much slower than the SYNC_CLK and this timing is arbitrary and slow, but fast enough to be undetectable on the human scale, Which
 //  is what this is being used for currently.
-void DDSlaodBuffer(){
+void DDSloadBuffer(){
 
   digitalWrite(DDS_IO_UPDATE_PIN, HIGH);
   delay(5);
@@ -500,7 +499,7 @@ QueueArray <uint8_t> intToBytes(uint_fast64_t integer, uint_fast8_t bufferSize){
 // Sends a single tone
 void DDSsingleTone(QueueArray <uint8_t> &command){
 
-  uint32_t params [3];
+  uint64_t params [3];
   String paramsStr [3];
   uint64_t singleToneWord;
   
@@ -595,8 +594,8 @@ void DDSrampSetup(QueueArray <uint8_t> &command){
   limitsBytes.push(DDS_RAMP_LIMIT_BIN); // Limits register
   String startStr;
   String finishStr;
-  uint32_t start;
-  uint32_t finish;
+  uint64_t start;
+  uint64_t finish;
   uint64_t limits;
 
   // I NEED TO BE MORE CAREFUL HERE BECAUSE A BAD COMMAND COULD BREAK THIS I THINK KIND OF FUNCTIONALITY
@@ -623,8 +622,8 @@ void DDSrampSetup(QueueArray <uint8_t> &command){
   stepBytes.push(DDS_RAMP_STEP_SIZE_BIN); // Step register
   String decrementStr;
   String incrementStr;
-  uint32_t decrement;
-  uint32_t increment;
+  uint64_t decrement;
+  uint64_t increment;
   uint64_t stepSize;
 
   while (command.front() != ','){
@@ -650,8 +649,8 @@ void DDSrampSetup(QueueArray <uint8_t> &command){
   rateBytes.push(DDS_RAMP_RATE_BIN);  // Rate register
   String negativeRateStr;
   String positiveRateStr;
-  uint16_t negativeRate;
-  uint16_t positiveRate;
+  uint32_t negativeRate;
+  uint32_t positiveRate;
   uint32_t rate;
 
   while (command.front() != ','){
