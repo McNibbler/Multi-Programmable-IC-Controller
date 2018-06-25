@@ -154,6 +154,11 @@ class Application(QWidget):
         self.dds_load_button.setToolTip('Update the DDS by loading all selected parameters to the device')
         self.dds_load_button.clicked.connect(self.dds_load)
 
+        # Reset the dds to preferred defaults
+        self.dds_reset_button = QPushButton('Reset DDS')
+        self.dds_reset_button.setToolTip('Software reset to DDS to default settings')
+        self.dds_reset_button.clicked.connect(self.dds_reset)
+
         # Digital ramp generation parameters
         self.drg_select_checkbox = QCheckBox('Digital Ramp Enable')
         self.drg_select_checkbox.setToolTip('Ramp through a range of either Amplitudes, Phases, or Frequencies')
@@ -442,7 +447,9 @@ class Application(QWidget):
 
         dds_single_layout.addWidget(self.dds_amplitude_slider, 9, 0, 1, 4)
 
-        dds_single_layout.addWidget(self.dds_load_button, 10, 0, 1, 4)
+        dds_single_layout.addWidget(self.dds_reset_button, 10, 0, 1, 4)
+
+        dds_single_layout.addWidget(self.dds_load_button, 11, 0, 1, 4)
 
         # Single Tone half of frame
         dds_ramp_frame = QFrame()
@@ -558,6 +565,17 @@ class Application(QWidget):
             controller.disable_ramp()
             controller.send_single_tone(amplitude, amplitude_ref, phase, frequency, freq_sysclk)
             controller.load()
+
+    # Resets the DDS to the defaults that I like
+    def dds_reset(self):
+        controller.reset()
+        box = QMessageBox()
+        box.setIcon(QMessageBox.Information)
+        box.setText('Information:')
+        box.setInformativeText('The DDS has been reset to the default settings.')
+        box.setStandardButtons(QMessageBox.Ok)
+        box.exec_()
+        return
 
     def drg_toggle(self):
 
@@ -1134,6 +1152,9 @@ if __name__ == '__main__':
 
     # Resets the DAC outputs to 0 upon closing
     controller.send_voltage(controller.DAC_2, 0, nice.reference_voltage, nice.gain, nice.is_bipolar)
+
+    # Resets the DDS to the default settings
+    controller.reset()
 
     sys.exit()
 
