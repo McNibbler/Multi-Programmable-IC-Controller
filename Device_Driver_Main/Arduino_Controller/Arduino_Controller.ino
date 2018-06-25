@@ -46,6 +46,10 @@ const uint_fast8_t DDS_PROFILE_PIN_0 = 5;
 const uint_fast8_t DDS_PROFILE_PIN_1 = 6;
 const uint_fast8_t DDS_PROFILE_PIN_2 = 7;
 
+const uint_fast8_t DDS_RESET_CTRL = 8;
+const uint_fast8_t DDS_RAMP_CTRL = 2;
+const uint_fast8_t DDS_RAMP_LIMIT = 3;
+
 // const uint_fast8_t LDAC = 8;
 // SDI = 11;
 // SDO = 12;
@@ -106,6 +110,9 @@ const uint8_t DONE = '!';
 
   // Command to load the values stored in the buffer into the active registers
   const uint8_t DDS_LOAD = 'l';
+
+  // Command to reset the DDS to my preferred defaults
+  const uint8_t DDS_RESET = 'r';
 
   // Single tone / RAM profiles
   const uint8_t DDS_PROFILES [8] = {'0', '1', '3', '4', '5', '6', '7'};
@@ -235,6 +242,15 @@ void setup() {
   digitalWrite(DDS_PROFILE_PIN_1, LOW);
   digitalWrite(DDS_PROFILE_PIN_2, LOW);
 
+  // Sets the extra pins
+  pinMode(DDS_RESET_CTRL, OUTPUT);
+  pinMode(DDS_RAMP_CTRL, OUTPUT);
+  pinMode(DDS_RAMP_LIMIT, OUTPUT);
+  digitalWrite(DDS_RESET_CTRL, LOW);
+  digitalWrite(DDS_RAMP_CTRL, LOW);
+  digitalWrite(DDS_RAMP_LIMIT, LOW);
+  
+
   // Sets LDAC to low because synchronous updating isn't important for this
   // pinMode(LDAC, OUTPUT);
   // digitalWrite(LDAC, LOW);
@@ -336,6 +352,12 @@ void DDScommand(QueueArray <uint8_t> &command){
     purge(command);
     return;
   }
+  // Resets the DDS to my preferred defaults
+  else if (front == DDS_RESET){
+    DDSreset();
+    purge(command);
+    return;
+  }
   // Loads the data from the buffers into the active registers
   else if (front == DDS_LOAD){
     DDSloadBuffer();
@@ -356,9 +378,33 @@ void DDScommand(QueueArray <uint8_t> &command){
 //  is what this is being used for currently.
 void DDSloadBuffer(){
 
+  QueueArray <uint8_t> controlBytes;
+  controlBytes.push(DDS_CFR3_BIN);
+
+  // Sets the control values of register 3 to preferred defaults, bypassing the clock divider
+  controlBytes.push(0x1F);
+  controlBytes.push(0x3F);
+  controlBytes.push(0xC0);
+  controlBytes.push(0x00);
+
+  DDSsendData(controlBytes, DEFAULT_SETTINGS);
+
+  // Loads that spicy binche into the dds yum yum
   digitalWrite(DDS_IO_UPDATE_PIN, HIGH);
   delay(5);
   digitalWrite(DDS_IO_UPDATE_PIN, LOW);
+
+}
+
+// Resets this spicy boi
+void DDSreset(){
+
+  digitalWrite(DDS_RESET_CTRL, HIGH);
+  delay(5);
+  digitalWrite(DDS_RESET_CTRL, LOW);
+
+  // Really only doing this so that I get those defaults that I like
+  DDSloadBuffer();
 
 }
 
@@ -538,7 +584,7 @@ void DDSrampDisable(){
 
   // Sets all control values to default
   controlBytes.push(0x00);
-  controlBytes.push(0x40);
+  controlBytes.push(0xC0);
   controlBytes.push(0x08);
   controlBytes.push(0x20);
 

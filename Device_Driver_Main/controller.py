@@ -49,6 +49,11 @@ def load():
     send_command(DDS.create_load_command())
 
 
+# Resets the DDS to the defaults I'm using for this program
+def reset():
+    send_command(DDS.create_reset_command())
+
+
 # Sends a disable ramp command to the DDS
 def disable_ramp():
     send_command(DDS.create_disable_ramp_command())

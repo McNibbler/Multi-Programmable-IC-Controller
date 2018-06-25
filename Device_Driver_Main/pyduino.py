@@ -133,6 +133,9 @@ DDS_LOAD = 'l'
 # Single Tone / RAM profiles
 DDS_PROFILES = ['0', '1', '2', '3', '4', '5', '6', '7']
 
+# Resetboi
+DDS_RESET = 'r'
+
 
 #################
 # PMIC COMMANDS #
@@ -202,6 +205,13 @@ class DDS:
 
     def __init__(self):
         pass
+
+    @staticmethod
+    # Resets the dds to its initial software state (except for the default settings that I'm using, specifically
+    #   turning off the sysclk divide by 2 because for whatever reason that's a software default)
+    def create_reset_command():
+        reset_command = str(DDS_INDICATOR + DDS_RESET + DONE)
+        return reset_command
 
     @staticmethod
     # Sends the command to signify that the data in the registers needs to be loaded
