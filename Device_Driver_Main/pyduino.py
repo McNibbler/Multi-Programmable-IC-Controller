@@ -229,14 +229,15 @@ class DDS:
 
         if parameter not in (DDS_FREQUENCY, DDS_PHASE, DDS_AMPLITUDE):
 
-            error('Invalid Parameter')
+            raise ValueError('Invalid Parameter')
             return ''
 
         drg_lower_limit = DDS.calculate_full_scale_binary(32, start, reference)
         drg_upper_limit = DDS.calculate_full_scale_binary(32, stop, reference)
 
-        drg_decrement = DDS.calculate_full_scale_binary(32, decrement, stop - start)
-        drg_increment = DDS.calculate_full_scale_binary(32, increment, stop - start)
+        # Unusual that this is done on full scale math rather than between the start and stop but whatever
+        drg_decrement = DDS.calculate_full_scale_binary(32, decrement, reference)
+        drg_increment = DDS.calculate_full_scale_binary(32, increment, reference)
 
         drg_rate_n = DDS.calculate_full_scale_binary(16, rate_n, (4 / sysclk) * (1 << 16))
         drg_rate_p = DDS.calculate_full_scale_binary(16, rate_p, (4 / sysclk) * (1 << 16))

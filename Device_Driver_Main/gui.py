@@ -202,7 +202,7 @@ class Application(QWidget):
         self.dds_amplitude_range = range(0, int(self.dds_amplitude_iterator * self.dds_max_amplitude))
 
         self.dds_amplitude_label = QLabel()
-        self.dds_amplitude_label.setText('Amplitude (V)')
+        self.dds_amplitude_label.setText('Amplitude')
         self.dds_amplitude_slider = QSlider(Qt.Horizontal)
         self.dds_amplitude_slider.setRange(min(self.dds_amplitude_range), max(self.dds_amplitude_range))
         self.dds_amplitude_slider.sliderReleased.connect(self.update_amplitude_slider)
@@ -214,12 +214,12 @@ class Application(QWidget):
         self.dds_amplitude_ref_label = QLabel()
         self.dds_amplitude_ref_label.setText('Reference:')
         self.dds_amplitude_ref_textbox = QLineEdit()
-        self.dds_amplitude_ref_textbox.setToolTip('Max Reference Voltage (V)')
+        self.dds_amplitude_ref_textbox.setToolTip('Max Reference ASF')
         self.dds_amplitude_ref_textbox.setText("%.5f" % self.dds_max_amplitude)
         self.dds_amplitude_ref_textbox.returnPressed.connect(self.update_amplitude_ref)
 
         # DRG sliders
-        self.dds_drg_parameters = ['Frequency (Hz)', 'Phase (deg)', 'Amplitude (V)']
+        self.dds_drg_parameters = ['Frequency (Hz)', 'Phase (deg)', 'Amplitude']
 
         self.dds_drg_parameter_select = QComboBox()
         self.dds_drg_parameter_select.addItems(self.dds_drg_parameters)
