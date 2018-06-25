@@ -326,7 +326,8 @@ void executeCommand(QueueArray <uint8_t> &command){
 
 // Empties a queue by popping everything in it. There's probably a faster way to do this.
 void purge(QueueArray <uint8_t> &queue){
-  while(!queue.isEmpty()) queue.pop();
+  queue.~QueueArray();
+  // while(!queue.isEmpty()) queue.pop();
 }
 
 /////////// DDS ///////////
